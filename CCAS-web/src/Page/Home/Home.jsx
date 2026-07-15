@@ -27,6 +27,13 @@ export default function Home() {
   // Real API audit result state
   const [auditResult, setAuditResult] = useState(null);
   
+  // Pagination & Scan Timer states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [scanStartTime, setScanStartTime] = useState('');
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [estimatedCompleteTime, setEstimatedCompleteTime] = useState('');
+
+  
   const fileInputRef = useRef(null);
   const progressIntervalRef = useRef(null);
 
@@ -39,7 +46,24 @@ export default function Home() {
     { threshold: 90, text: 'Parsing results and compiling remediation solutions...' }
   ];
 
+  // Timer effect for active scanning
+  useEffect(() => {
+    let interval = null;
+    if (uploadState === 'scanning') {
+      const startTicks = Date.now();
+      interval = setInterval(() => {
+        setElapsedSeconds(Math.floor((Date.now() - startTicks) / 1000));
+      }, 1000);
+    } else {
+      setElapsedSeconds(0);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [uploadState]);
+
   const formatBytes = (bytes, decimals = 1) => {
+
     if (!bytes) return '0 Bytes';
     const k = 1024;
     const dm = decimals < 0 ? 0 : decimals;
@@ -109,6 +133,18 @@ export default function Home() {
     setUploadState('scanning');
     setProgress(0);
     setStatusMessage('Uploading file to local CCAS-Agent...');
+    
+    const now = new Date();
+    const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    setScanStartTime(timeString);
+    
+    // Estimate Ornith 35B average execution of 90 seconds
+    const estDone = new Date(now.getTime() + 90 * 1000);
+    const estDoneString = estDone.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    setEstimatedCompleteTime(estDoneString);
+    
+    setCurrentPage(1);
+
 
     // 1. Start progress visual ticker (goes up to 90% and waits for completion)
     let currentProgress = 0;
@@ -173,237 +209,130 @@ export default function Home() {
     setProgress(0);
     setErrorMsg('');
     setAuditResult(null);
+    setCurrentPage(1);
+    setScanStartTime('');
+    setElapsedSeconds(0);
+    setEstimatedCompleteTime('');
   };
 
-  // Generate printable PDF report using iframe print window
+
+  // Generate printable PDF report with direct download bypassing print dialog
   const downloadPdfReport = () => {
     if (!auditResult || !file) return;
 
-    // Resolve unified list of sections from the API payload (with fallback parsing)
-    const allSections = auditResult.all_sections || [
-      ...(auditResult.matches || []).map(m => ({ ...m, compliant: true })),
-      ...(auditResult.gaps || []).map(g => ({ ...g, compliant: false }))
-    ].sort((a, b) => a.id.localeCompare(b.id));
+    // Load html2pdf from CDN dynamically
+    const loadHtml2Pdf = () => {
+      return new Promise((resolve) => {
+        if (window.html2pdf) {
+          resolve(window.html2pdf);
+          return;
+        }
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+        script.onload = () => resolve(window.html2pdf);
+        document.head.appendChild(script);
+      });
+    };
 
-    const printWindow = window.open('', '_blank');
-    const html = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>CCAS Compliance Report - ${file.name}</title>
-          <style>
-            body {
-              font-family: 'Segoe UI', system-ui, sans-serif;
-              padding: 40px;
-              color: #0f172a;
-              background-color: #ffffff;
-              line-height: 1.5;
-            }
-            .header-container {
-              display: flex;
-              justify-content: space-between;
-              align-items: center;
-              border-bottom: 2px solid #f97316;
-              padding-bottom: 15px;
-              margin-bottom: 25px;
-            }
-            .header-title h1 {
-              font-size: 1.8rem;
-              margin: 0;
-              color: #0f172a;
-            }
-            .header-title p {
-              font-size: 0.85rem;
-              color: #475569;
-              margin: 4px 0 0 0;
-            }
-            .score-circle {
-              width: 75px;
-              height: 75px;
-              border-radius: 50%;
-              border: 4px solid #fff7ed;
-              background: #fff7ed;
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              justify-content: center;
-            }
-            .score-num {
-              font-size: 1.5rem;
-              font-weight: 800;
-              color: #ea580c;
-              line-height: 1;
-            }
-            .score-lbl {
-              font-size: 0.55rem;
-              color: #ea580c;
-              text-transform: uppercase;
-              font-weight: bold;
-              margin-top: 2px;
-            }
-            .meta-section {
-              background-color: #f8fafc;
-              border: 1px solid #e2e8f0;
-              border-radius: 8px;
-              padding: 15px;
-              margin-bottom: 25px;
-              font-size: 0.85rem;
-            }
-            .meta-grid {
-              display: grid;
-              grid-template-columns: repeat(2, 1fr);
-              gap: 10px;
-            }
-            .meta-item {
-              display: flex;
-              gap: 8px;
-            }
-            .meta-lbl {
-              font-weight: bold;
-              color: #475569;
-              width: 130px;
-            }
-            .meta-val {
-              color: #0f172a;
-            }
-            .checklist-title {
-              font-size: 1.25rem;
-              font-weight: 700;
-              margin-bottom: 15px;
-              color: #0f172a;
-              border-bottom: 1px solid #e2e8f0;
-              padding-bottom: 8px;
-            }
-            .section-row {
-              border: 1px solid #e2e8f0;
-              border-radius: 8px;
-              padding: 15px;
-              margin-bottom: 15px;
-              page-break-inside: avoid;
-            }
-            .section-header {
-              display: flex;
-              justify-content: space-between;
-              align-items: center;
-              margin-bottom: 8px;
-            }
-            .section-name {
-              font-weight: bold;
-              font-size: 1rem;
-              color: #0f172a;
-            }
-            .badge {
-              padding: 3px 8px;
-              border-radius: 4px;
-              font-size: 0.75rem;
-              font-weight: bold;
-              text-transform: uppercase;
-            }
-            .badge.compliant {
-              background-color: #d1fae5;
-              color: #065f46;
-            }
-            .badge.partial {
-              background-color: #fef3c7;
-              color: #92400e;
-            }
-            .badge.non-compliant {
-              background-color: #fff7ed;
-              color: #c2410c;
-            }
-            .desc {
-              font-size: 0.85rem;
-              color: #334155;
-              margin: 0;
-            }
-            .remediation {
-              margin-top: 10px;
-              padding: 10px;
-              background-color: #fffbeb;
-              border-left: 3px solid #f59e0b;
-              border-radius: 4px;
-              font-size: 0.85rem;
-            }
-            .remediation strong {
-              display: block;
-              color: #b45309;
-              font-size: 0.75rem;
-              text-transform: uppercase;
-              margin-bottom: 3px;
-            }
-            .remediation p {
-              margin: 0;
-              color: #78350f;
-            }
-            @media print {
-              body { padding: 0; }
-              .no-print { display: none; }
-            }
-          </style>
-        </head>
-        <body>
-          <div class="header-container">
-            <div class="header-title">
-              <h1>CCAS Compliance Assessment Report</h1>
-              <p>Automated Cybersecurity Audit Matrix against CCoP v2.1 Standards</p>
+    // Build the hierarchical HTML structure
+    const sectionsHtml = auditSections.map(sec => {
+      const st = sec.overall_status || normalizeStatus(sec);
+      const badgeCls = st === 'compliant' ? 'compliant' : st === 'partial' ? 'partial' : 'non-compliant';
+      const badgeTxt = st === 'compliant' ? 'Compliant' : st === 'partial' ? 'Partially Compliant' : 'Non-Compliant';
+
+      const subsectionsHtml = (sec.subsections || []).map(sub => {
+        const subSt = normalizeStatus(sub);
+        const subBadgeCls = subSt === 'compliant' ? 'compliant' : subSt === 'partial' ? 'partial' : 'non-compliant';
+        const subBadgeTxt = subSt === 'compliant' ? 'Compliant' : subSt === 'partial' ? 'Partially Compliant' : 'Non-Compliant';
+        const subActionLabel = subSt === 'partial' ? 'Action Required:' : 'Proposed Solution to Comply:';
+
+        return `
+          <div class="subsection-row" style="margin-left: 20px; border-left: 3px solid #e2e8f0; padding-left: 15px; margin-bottom: 15px; page-break-inside: avoid;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+              <strong style="font-size: 0.88rem; color: #1e293b;">${sub.id} - ${sub.title}</strong>
+              <span class="badge ${subBadgeCls}" style="font-size: 0.65rem; padding: 2px 6px;">${subBadgeTxt}</span>
             </div>
-            <div class="score-circle">
-              <span class="score-num">${auditResult.compliance_percentage}%</span>
-              <span class="score-lbl">Adherent</span>
-            </div>
+            <p class="desc" style="margin: 0; font-size: 0.8rem; color: #475569; line-height: 1.45;">${sub.description || ''}</p>
+            ${(subSt === 'partial' || subSt === 'non-compliant') && sub.proposed_solution ? `
+              <div class="remediation" style="margin-top: 8px; padding: 8px 10px; background-color: #fffbeb; border-left: 3px solid #f59e0b; border-radius: 4px; font-size: 0.78rem;">
+                <strong style="color: #b45309; display: block; margin-bottom: 2px; font-size: 0.68rem; text-transform: uppercase;">${subActionLabel}</strong>
+                <p style="margin: 0; color: #78350f; line-height: 1.45;">${sub.proposed_solution}</p>
+              </div>
+            ` : ''}
           </div>
-          <div class="meta-section">
-            <div class="meta-grid">
-              <div class="meta-item">
-                <span class="meta-lbl">Target Document:</span>
-                <span class="meta-val">${file.name}</span>
-              </div>
-              <div class="meta-item">
-                <span class="meta-lbl">Assessment Date:</span>
-                <span class="meta-val">${new Date().toLocaleDateString()}</span>
-              </div>
-              <div class="meta-item">
-                <span class="meta-lbl">Document Size:</span>
-                <span class="meta-val">${file.size}</span>
-              </div>
-              <div class="meta-item">
-                <span class="meta-lbl">Regulatory Body:</span>
-                <span class="meta-val">CCAS Compliance Engine</span>
-              </div>
-            </div>
+        `;
+      }).join('');
+
+      return `
+        <div class="section-row" style="border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 18px; margin-bottom: 20px; page-break-inside: avoid;">
+          <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ea580c; padding-bottom: 8px; margin-bottom: 15px;">
+            <span class="section-name" style="font-weight: 800; font-size: 1rem; color: #0f172a;">Section ${sec.section_num}: ${sec.section_title}</span>
+            <span class="badge ${badgeCls}">${badgeTxt}</span>
           </div>
-          <div class="checklist-title">Standard Controls Checklist Audit</div>
-          ${allSections.map(sec => {
-            const st = normalizeStatus(sec);
-            const badgeCls = st === 'compliant' ? 'compliant' : st === 'partial' ? 'partial' : 'non-compliant';
-            const badgeTxt = st === 'compliant' ? 'Compliant' : st === 'partial' ? 'Partially Compliant' : 'Non-Compliant';
-            const actionLabel = st === 'partial' ? 'Action Required to Fully Comply:' : 'Proposed Solution to Comply:';
-            return `
-            <div class="section-row">
-              <div class="section-header">
-                <span class="section-name">${sec.id} - ${sec.title}</span>
-                <span class="badge ${badgeCls}">${badgeTxt}</span>
-              </div>
-              <p class="desc">${sec.description}</p>
-              ${(st === 'partial' || st === 'non-compliant') && sec.proposed_solution ? `
-                <div class="remediation">
-                  <strong>${actionLabel}</strong>
-                  <p>${sec.proposed_solution}</p>
-                </div>
-              ` : ''}
-            </div>`;
-          }).join('')}
-        </body>
-      </html>
+          ${subsectionsHtml}
+        </div>
+      `;
+    }).join('');
+
+    const htmlContent = `
+      <div style="font-family: 'Segoe UI', system-ui, sans-serif; padding: 25px; color: #0f172a; line-height: 1.5;">
+        <div class="header-container" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #ea580c; padding-bottom: 15px; margin-bottom: 25px;">
+          <div class="header-title">
+            <h1 style="font-size: 1.75rem; margin: 0; color: #0f172a; font-weight: 800;">CCAS Compliance Assessment Report</h1>
+            <p style="font-size: 0.82rem; color: #475569; margin: 4px 0 0 0;">Automated Cybersecurity Audit Matrix against CCoP v2.1 Standards</p>
+          </div>
+          <div class="score-circle" style="width: 75px; height: 75px; border-radius: 50%; border: 4px solid #fff7ed; background: #fff7ed; display: flex; flex-direction: column; align-items: center; justify-content: center; flex-shrink: 0;">
+            <span class="score-num" style="font-size: 1.5rem; font-weight: 800; color: #ea580c; line-height: 1;">${auditResult.compliance_percentage}%</span>
+            <span class="score-lbl" style="font-size: 0.55rem; color: #ea580c; text-transform: uppercase; font-weight: bold; margin-top: 2px;">Adherent</span>
+          </div>
+        </div>
+
+        <div class="meta-section" style="background-color: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 15px; margin-bottom: 25px; font-size: 0.82rem;">
+          <div class="meta-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+            <div class="meta-item"><span class="meta-lbl" style="font-weight: bold; color: #475569; width: 130px; display: inline-block;">Target Document:</span><span class="meta-val" style="color: #0f172a;">${file.name}</span></div>
+            <div class="meta-item"><span class="meta-lbl" style="font-weight: bold; color: #475569; width: 130px; display: inline-block;">Assessment Date:</span><span class="meta-val" style="color: #0f172a;">${new Date().toLocaleDateString()}</span></div>
+            <div class="meta-item"><span class="meta-lbl" style="font-weight: bold; color: #475569; width: 130px; display: inline-block;">Document Size:</span><span class="meta-val" style="color: #0f172a;">${file.size}</span></div>
+            <div class="meta-item"><span class="meta-lbl" style="font-weight: bold; color: #475569; width: 130px; display: inline-block;">Regulatory Body:</span><span class="meta-val" style="color: #0f172a;">CCAS Compliance Engine</span></div>
+          </div>
+        </div>
+
+        <div class="checklist-title" style="font-size: 1.2rem; font-weight: 800; margin-bottom: 20px; color: #0f172a; border-bottom: 1.5px solid #e2e8f0; padding-bottom: 8px;">Standard Controls Checklist Audit</div>
+        
+        <style>
+          .badge { padding: 3px 8px; border-radius: 4px; font-size: 0.72rem; font-weight: bold; text-transform: uppercase; white-space: nowrap; }
+          .badge.compliant { background-color: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
+          .badge.partial { background-color: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+          .badge.non-compliant { background-color: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+        </style>
+
+        ${sectionsHtml}
+      </div>
     `;
-    printWindow.document.write(html);
-    printWindow.document.close();
-    printWindow.focus();
-    setTimeout(() => {
-      printWindow.print();
-      printWindow.close();
-    }, 500);
+
+    // Create a temporary hidden container element
+    const optContainer = document.createElement('div');
+    optContainer.innerHTML = htmlContent;
+    document.body.appendChild(optContainer);
+
+    // Call html2pdf bundle for direct download
+    loadHtml2Pdf().then((html2pdf) => {
+      const opt = {
+        margin:       15,
+        filename:     `CCAS_Compliance_Report_${file.name.replace(/\.[^/.]+$/, "")}.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true, letterRendering: true },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+
+      html2pdf().set(opt).from(optContainer).save().then(() => {
+        optContainer.remove();
+      }).catch((err) => {
+        console.error("PDF generation error: ", err);
+        optContainer.remove();
+      });
+    });
   };
+
 
   // Normalize subsection/section status
   const normalizeStatus = (sec) => {
@@ -598,7 +527,31 @@ export default function Home() {
                         }} />
                       ))}
                     </div>
+
+                    {/* Beautiful Scan Timing Metric Blocks */}
+                    <div style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(3, 1fr)',
+                      gap: '0.5rem',
+                      width: '100%',
+                      marginTop: '0.25rem',
+                      textAlign: 'center'
+                    }}>
+                      <div style={{ background: '#fff7ed', border: '1px solid #ffedd5', borderRadius: '6px', padding: '6px 4px' }}>
+                        <div style={{ fontSize: '0.55rem', textTransform: 'uppercase', color: '#9a3412', fontWeight: 700, letterSpacing: '0.5px' }}>Started At</div>
+                        <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#431407', fontFamily: 'monospace', marginTop: '2px' }}>{scanStartTime || '--:--:--'}</div>
+                      </div>
+                      <div style={{ background: '#f0fdf4', border: '1px solid #dcfce7', borderRadius: '6px', padding: '6px 4px' }}>
+                        <div style={{ fontSize: '0.55rem', textTransform: 'uppercase', color: '#166534', fontWeight: 700, letterSpacing: '0.5px' }}>Elapsed</div>
+                        <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#14532d', fontFamily: 'monospace', marginTop: '2px' }}>{elapsedSeconds}s</div>
+                      </div>
+                      <div style={{ background: '#eff6ff', border: '1px solid #dbeafe', borderRadius: '6px', padding: '6px 4px' }}>
+                        <div style={{ fontSize: '0.55rem', textTransform: 'uppercase', color: '#1e40af', fontWeight: 700, letterSpacing: '0.5px' }}>Est. Done</div>
+                        <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#172554', fontFamily: 'monospace', marginTop: '2px' }}>{estimatedCompleteTime || '--:--:--'}</div>
+                      </div>
+                    </div>
                   </div>
+
 
                   {/* Right Column: High-contrast colorful logs */}
                   <div style={{
@@ -650,6 +603,14 @@ export default function Home() {
             const compliantSubs = auditSections.reduce((acc, s) => acc + (s.subsections?.filter(sub => normalizeStatus(sub) === 'compliant').length || 0), 0);
             const partialSubs = auditSections.reduce((acc, s) => acc + (s.subsections?.filter(sub => normalizeStatus(sub) === 'partial').length || 0), 0);
             const nonSubs = totalSubs - compliantSubs - partialSubs;
+
+            const sectionsPerPage = 4;
+            const totalPages = Math.ceil(auditSections.length / sectionsPerPage);
+            const displayedSections = auditSections.slice(
+              (currentPage - 1) * sectionsPerPage,
+              currentPage * sectionsPerPage
+            );
+
 
             return (
               <div className="state-content fade-in">
@@ -719,16 +680,74 @@ export default function Home() {
                   </div>
                 </div>
 
-                {/* ── Section label ── */}
-                <div className="section-title-wrapper" style={{ marginTop: '0.25rem' }}>
-                  <Info size={15} style={{ color: 'var(--primary)' }} />
-                  <h4>CCoP v2.1 Section Compliance ({auditSections.length} sections)</h4>
+                {/* ── Section title row with download & rescan icons ── */}
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  width: '100%',
+                  marginTop: '1.25rem',
+                  paddingBottom: '0.5rem',
+                  borderBottom: '1.5px solid #f1f5f9'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <Info size={15} style={{ color: 'var(--primary)' }} />
+                    <h4 style={{ margin: 0, fontWeight: 700, fontSize: '0.88rem', color: '#1e293b' }}>
+                      CCoP v2.1 Section Compliance ({auditSections.length} sections)
+                    </h4>
+                  </div>
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <button
+                      onClick={downloadPdfReport}
+                      title="Download PDF Report"
+                      style={{
+                        background: '#ffffff',
+                        border: '1.5px solid #ea580c',
+                        borderRadius: '6px',
+                        padding: '6px 8px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#ea580c',
+                        transition: 'all 0.2s',
+                        boxShadow: '0 1px 2px rgba(234, 88, 12, 0.05)'
+                      }}
+                      onMouseOver={(e) => { e.currentTarget.style.background = '#fff7ed'; }}
+                      onMouseOut={(e) => { e.currentTarget.style.background = '#ffffff'; }}
+                    >
+                      <Download size={15} style={{ marginRight: '4px' }} />
+                      <span style={{ fontSize: '0.72rem', fontWeight: 700 }}>Download PDF</span>
+                    </button>
+                    <button
+                      onClick={resetUploader}
+                      title="Analyze Another Plan"
+                      style={{
+                        background: '#ffffff',
+                        border: '1.5px solid #cbd5e1',
+                        borderRadius: '6px',
+                        padding: '6px 8px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#64748b',
+                        transition: 'all 0.2s',
+                        boxShadow: '0 1px 2px rgba(0,0,0,0.02)'
+                      }}
+                      onMouseOver={(e) => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.borderColor = '#94a3b8'; }}
+                      onMouseOut={(e) => { e.currentTarget.style.background = '#ffffff'; e.currentTarget.style.borderColor = '#cbd5e1'; }}
+                    >
+                      <RefreshCw size={15} style={{ marginRight: '4px' }} />
+                      <span style={{ fontSize: '0.72rem', fontWeight: 700 }}>Rescan</span>
+                    </button>
+                  </div>
                 </div>
 
-                {/* ── Collapsible Section Bars ── */}
-                <div className="list-wrapper" style={{ maxHeight: '360px' }}>
+                {/* ── Collapsible Section Bars (Paginated) ── */}
+                <div className="list-wrapper" style={{ maxHeight: '380px', marginTop: '0.25rem' }}>
                   <div className="items-list">
-                    {auditSections.map((section) => {
+                    {displayedSections.map((section) => {
                       const secStatus = section.overall_status || normalizeStatus(section);
                       const cfg = statusConfig(secStatus);
                       const isOpen = !!expandedSections[section.section_num];
@@ -810,20 +829,75 @@ export default function Home() {
                   </div>
                 </div>
 
-                {/* Action buttons */}
-                <div className="button-group" style={{ display: 'flex', gap: '1rem' }}>
-                  <button className="btn-secondary" onClick={downloadPdfReport} style={{ flex: 1 }}>
-                    <Download size={14} />
-                    <span>Download PDF Report</span>
-                  </button>
-                  <button className="btn-reset" onClick={resetUploader} style={{ flex: 1 }}>
-                    <RefreshCw size={14} />
-                    <span>Analyze Another Plan</span>
-                  </button>
-                </div>
+                {/* ── Pagination Controls ── */}
+                {totalPages > 1 && (
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    gap: '0.4rem',
+                    marginTop: '0.5rem',
+                    paddingTop: '0.75rem',
+                    borderTop: '1.5px solid #f1f5f9'
+                  }}>
+                    <button
+                      disabled={currentPage === 1}
+                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                      style={{
+                        background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '6px',
+                        padding: '5px 10px', fontSize: '0.72rem', fontWeight: 700,
+                        cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                        color: currentPage === 1 ? '#94a3b8' : '#ea580c',
+                        opacity: currentPage === 1 ? 0.5 : 1,
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      Prev
+                    </button>
+                    
+                    {Array.from({ length: totalPages }).map((_, idx) => {
+                      const pageNum = idx + 1;
+                      const isCurrent = currentPage === pageNum;
+                      return (
+                        <button
+                          key={pageNum}
+                          onClick={() => setCurrentPage(pageNum)}
+                          style={{
+                            width: '28px', height: '28px', borderRadius: '6px',
+                            border: isCurrent ? '1.5px solid #ea580c' : '1px solid #cbd5e1',
+                            background: isCurrent ? '#fff7ed' : '#ffffff',
+                            color: isCurrent ? '#ea580c' : '#475569',
+                            fontWeight: 700, fontSize: '0.72rem', cursor: 'pointer',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            transition: 'all 0.2s'
+                          }}
+                        >
+                          {pageNum}
+                        </button>
+                      );
+                    })}
+
+                    <button
+                      disabled={currentPage === totalPages}
+                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                      style={{
+                        background: '#ffffff', border: '1px solid #cbd5e1', borderRadius: '6px',
+                        padding: '5px 10px', fontSize: '0.72rem', fontWeight: 700,
+                        cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                        color: currentPage === totalPages ? '#94a3b8' : '#ea580c',
+                        opacity: currentPage === totalPages ? 0.5 : 1,
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      Next
+                    </button>
+                  </div>
+                )}
+
               </div>
             );
           })()}
+
 
         </div>
       </main>
