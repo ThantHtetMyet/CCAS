@@ -340,9 +340,10 @@
 }
 
 @keyframes log-appear {
-  0%   { opacity: 0; transform: translateX(-4px); }
-  100% { opacity: 1; transform: translateX(0); }
+  0%   { opacity: 0; transform: perspective(400px) rotateX(-15deg) translateY(6px); }
+  100% { opacity: 1; transform: perspective(400px) rotateX(0deg) translateY(0); }
 }
+
 
 .active-pulse-row {
   animation: pulse-opacity 1s ease-in-out infinite alternate !important;
