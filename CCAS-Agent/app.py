@@ -242,8 +242,9 @@ def analyze_compliance():
                 ],
                 "temperature": 0.2
             },
-            timeout=180,
+            timeout=600,
             proxies={"http": None, "https": None}
+
         )
 
         if response.status_code != 200:
