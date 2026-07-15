@@ -224,10 +224,11 @@ def analyze_compliance():
         f"CCoP SUBSECTION CHECKLIST — audit ALL {total_subsections} items using semantic topic matching:\n"
         f"{checklist_str}\n\n"
         f"UPLOADED CYBERSECURITY PLAN TEXT (search the entire text below for relevant content):\n"
-        f"{extracted_text[:9000]}\n\n"
+        f"{extracted_text[:400000]}\n\n"
         "Audit every subsection by finding related content anywhere in the uploaded plan text. "
         "Do NOT require matching section titles. Return raw JSON only."
     )
+
 
 
 
