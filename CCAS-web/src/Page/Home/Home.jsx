@@ -34,6 +34,8 @@ export default function Home() {
   const [scanDuration, setScanDuration] = useState(0);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [estimatedCompleteTime, setEstimatedCompleteTime] = useState('');
+  const [scanLogs, setScanLogs] = useState([]);
+
  
   
   const fileInputRef = useRef(null);
@@ -657,46 +659,50 @@ export default function Home() {
                     </div>
                     {/* Log panel — white, matching height of left container */}
                     <div className="scan-log-panel" style={{ height: '326px', display: 'flex', flexDirection: 'column', padding: 0, overflow: 'hidden', border: '1.5px solid #cbd5e1', boxSizing: 'border-box' }}>
-                      <div className="scan-log-line" style={{ flex: 1, padding: '0.55rem 1rem', borderBottom: '1px solid #f1f5f9', margin: 0, animationDelay: '0s', boxSizing: 'border-box' }}>
-                        <span className="log-tag ok">PASS</span>
-                        <span>Section 3.1 — Leadership and Oversight · matched</span>
-                      </div>
-                      <div className="scan-log-line" style={{ flex: 1, padding: '0.55rem 1rem', borderBottom: '1px solid #f1f5f9', margin: 0, animationDelay: '0.6s', boxSizing: 'border-box' }}>
-                        <span className="log-tag warn">EVAL</span>
-                        <span>Section 5.1 — Access Control · analyzing...</span>
-                      </div>
-                      <div className="scan-log-line" style={{ flex: 1, padding: '0.55rem 1rem', borderBottom: '1px solid #f1f5f9', margin: 0, animationDelay: '1.2s', boxSizing: 'border-box' }}>
-                        <span className="log-tag info">SCAN</span>
-                        <span>Section 8.2 — BCP/DRP · cross-referencing...</span>
-                      </div>
-                      <div className="scan-log-line" style={{ flex: 1, padding: '0.55rem 1rem', borderBottom: '1px solid #f1f5f9', margin: 0, animationDelay: '1.8s', boxSizing: 'border-box' }}>
-                        <span className="log-tag ok">PASS</span>
-                        <span>Section 9.1 — Awareness Programme · confirmed</span>
-                      </div>
-                      <div className="scan-log-line" style={{ flex: 1, padding: '0.55rem 1rem', borderBottom: '1px solid #f1f5f9', margin: 0, animationDelay: '2.4s', boxSizing: 'border-box' }}>
-                        <span className="log-tag fail">FAIL</span>
-                        <span>Section 6.3 — Threat Hunting · not found</span>
-                      </div>
-                      {/* Active Blinking Scan Status Row */}
-                      <div className="scan-log-line active-pulse-row" style={{ 
-                        flex: 1, 
-                        padding: '0.55rem 1rem', 
-                        margin: 0,
-                        background: 'linear-gradient(90deg, #fff7ed 0%, #ffffff 100%)', 
-                        display: 'flex', 
-                        alignItems: 'center',
-                        borderBottomLeftRadius: '7px',
-                        borderBottomRightRadius: '7px',
-                        boxSizing: 'border-box'
-                      }}>
-                        <span className="log-tag warn">SCAN</span>
-                        <span style={{ fontWeight: 600, color: '#ea580c' }}>
-                          Analyzing: {statusMessage || 'CCoP compliance checklist mappings'}...
-                        </span>
-                        <span className="blinking-cursor">|</span>
-                      </div>
+                      {scanLogs.map((log, index) => {
+                        const isLast = index === scanLogs.length - 1;
+                        const tagClass = log.type === 'ok' ? 'ok' : log.type === 'warn' ? 'warn' : log.type === 'fail' ? 'fail' : 'info';
+                        const tagText = log.type === 'ok' ? 'PASS' : log.type === 'warn' ? 'EVAL' : log.type === 'fail' ? 'FAIL' : 'SCAN';
 
+                        if (isLast) {
+                          return (
+                            <div key={log.id} className="scan-log-line active-pulse-row" style={{ 
+                              height: '54.3px', 
+                              padding: '0.55rem 1rem', 
+                              margin: 0,
+                              background: 'linear-gradient(90deg, #fff7ed 0%, #ffffff 100%)', 
+                              display: 'flex', 
+                              alignItems: 'center',
+                              borderBottomLeftRadius: '7px',
+                              borderBottomRightRadius: '7px',
+                              boxSizing: 'border-box'
+                            }}>
+                              <span className="log-tag warn">SCAN</span>
+                              <span style={{ fontWeight: 600, color: '#ea580c', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
+                                {log.text}
+                              </span>
+                              <span className="blinking-cursor">|</span>
+                            </div>
+                          );
+                        }
 
+                        return (
+                          <div key={log.id} className="scan-log-line" style={{ 
+                            height: '54.3px', 
+                            padding: '0.55rem 1rem', 
+                            borderBottom: '1px solid #f1f5f9', 
+                            margin: 0, 
+                            boxSizing: 'border-box', 
+                            display: 'flex', 
+                            alignItems: 'center' 
+                          }}>
+                            <span className={`log-tag ${tagClass}`}>{tagText}</span>
+                            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, color: '#334155' }}>
+                              {log.text}
+                            </span>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 </div>
