@@ -1,10 +1,15 @@
 import os
 import json
+import re
 import zipfile
 import xml.etree.ElementTree as ET
 import requests
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+
+# Prevent proxy interception for local network and LM Studio endpoints
+os.environ['NO_PROXY'] = '192.3.71.67,127.0.0.1,localhost'
+os.environ['no_proxy'] = '192.3.71.67,127.0.0.1,localhost'
 
 app = Flask(__name__)
 CORS(app) # Allow cross-origin requests from React dev server (port 5173)
@@ -172,7 +177,8 @@ def analyze_compliance():
                 ],
                 "temperature": 0.2
             },
-            timeout=45
+            timeout=180,
+            proxies={"http": None, "https": None}
         )
 
         if response.status_code != 200:
@@ -192,6 +198,9 @@ def analyze_compliance():
         audit_results = json.loads(cleaned_json)
         return jsonify(audit_results)
 
+    except requests.exceptions.Timeout as e:
+        print(f"[!] Request timed out: {e}")
+        return jsonify({"error": "LM Studio took too long to respond (timeout). Your document is being analyzed, but the local model is running slowly. Try allocating more GPU layers in LM Studio."}), 504
     except requests.exceptions.RequestException as e:
         print(f"[!] Connection failed: {e}")
         return jsonify({"error": "Failed to connect to LM Studio API at 192.3.71.67:1234. Please verify it is running and accessible."}), 502
