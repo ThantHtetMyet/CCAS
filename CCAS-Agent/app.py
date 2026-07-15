@@ -10,7 +10,7 @@ app = Flask(__name__)
 CORS(app) # Allow cross-origin requests from React dev server (port 5173)
 
 LM_STUDIO_URL = "http://192.3.71.67:1234/v1/chat/completions"
-MODEL_ID = "qwen-3-14b-instruct"
+MODEL_ID = "qwen-3-14b-instruct:2"
 
 # Fallback CCoP controls if prepared JSON is missing
 DEFAULT_CONTROLS = [
