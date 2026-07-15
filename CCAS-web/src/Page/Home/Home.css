@@ -188,71 +188,159 @@
   line-height: 1.4;
 }
 
-/* Animation Scanning Box */
-.animation-box {
-  width: 110px;
-  height: 110px;
+/* Animation Scanning Box — LEGACY (kept for fallback) */
+.animation-box { display: none; }
+
+/* ── Radar Scanner ── */
+.radar-container {
   position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 1rem 0;
+  width: 170px;
+  height: 170px;
+  flex-shrink: 0;
 }
 
-.scanning-outer-ring {
-  width: 100px;
-  height: 100px;
-  border: 3px double var(--primary-light);
-  border-top-color: var(--primary);
-  border-bottom-color: var(--primary);
+.radar-ring {
+  position: absolute;
   border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  animation: pulse-ring 2s infinite ease-in-out;
+  border: 1px solid rgba(249, 115, 22, 0.25);
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
 }
+.radar-ring-1 { width: 170px; height: 170px; border-color: rgba(249,115,22,0.20); }
+.radar-ring-2 { width: 120px; height: 120px; border-color: rgba(249,115,22,0.30); }
+.radar-ring-3 { width: 70px;  height: 70px;  border-color: rgba(249,115,22,0.45); }
 
-.scanning-core {
-  width: 76px;
-  height: 76px;
-  background: var(--primary-light);
-  border: 1px solid rgba(249, 115, 22, 0.15);
+/* Crosshairs */
+.radar-crosshair {
+  position: absolute;
+  background: rgba(249,115,22,0.15);
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+}
+.radar-crosshair-h { width: 170px; height: 1px; }
+.radar-crosshair-v { width: 1px; height: 170px; }
+
+/* Sweeping beam — conic gradient that rotates */
+.radar-sweep {
+  position: absolute;
+  width: 170px;
+  height: 170px;
   border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    rgba(249,115,22,0.0) 240deg,
+    rgba(249,115,22,0.08) 280deg,
+    rgba(249,115,22,0.35) 330deg,
+    rgba(249,115,22,0.55) 355deg,
+    transparent 360deg
+  );
+  animation: radar-spin 2.8s linear infinite;
+  top: 0; left: 0;
+}
+
+@keyframes radar-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* Center dot */
+.radar-center {
+  position: absolute;
+  width: 10px; height: 10px;
+  background: #f97316;
+  border-radius: 50%;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 12px #f97316, 0 0 24px rgba(249,115,22,0.4);
+  z-index: 6;
+}
+
+/* Radar blip dots */
+.radar-blip {
+  position: absolute;
+  width: 6px; height: 6px;
+  background: #f97316;
+  border-radius: 50%;
+  box-shadow: 0 0 8px #f97316;
+  animation: blip-fade 3s ease-in-out infinite;
+  transform: translate(-50%, -50%);
+  z-index: 4;
+}
+
+@keyframes blip-fade {
+  0%, 100% { opacity: 0; transform: translate(-50%,-50%) scale(0.5); }
+  40%, 60%  { opacity: 1; transform: translate(-50%,-50%) scale(1); }
+}
+
+/* Status pulse dot */
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; box-shadow: 0 0 10px #f97316; }
+  50%       { opacity: 0.4; box-shadow: 0 0 3px #f97316; }
+}
+
+/* ── Scan log panel ── */
+.scan-log-panel {
+  width: 100%;
+  background: #0b1a2e;
+  border: 1px solid #1e3a5f;
+  border-radius: 8px;
+  padding: 0.6rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-family: 'Courier New', monospace;
+  overflow: hidden;
+}
+
+.scan-log-line {
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 0.5rem;
+  font-size: 0.72rem;
+  color: #64748b;
+  animation: log-appear 3s ease-in-out infinite;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.spinner-icon {
-  color: var(--primary);
-  animation: spin 1.5s linear infinite;
+@keyframes log-appear {
+  0%, 15%   { opacity: 0; transform: translateX(-6px); }
+  25%, 75%  { opacity: 1; transform: translateX(0); }
+  90%, 100% { opacity: 0.3; }
 }
 
-@keyframes spin {
-  100% {
-    transform: rotate(360deg);
-  }
+.log-tag {
+  font-size: 0.6rem;
+  font-weight: 800;
+  padding: 1px 5px;
+  border-radius: 3px;
+  flex-shrink: 0;
+  letter-spacing: 0.5px;
+}
+.log-tag.ok   { background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.3); }
+.log-tag.warn { background: rgba(249,115,22,0.15);  color: #f97316; border: 1px solid rgba(249,115,22,0.3); }
+.log-tag.info { background: rgba(99,102,241,0.15);  color: #818cf8; border: 1px solid rgba(99,102,241,0.3); }
+
+/* Pulse spinner (small) */
+.pulse-spinner {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: #f97316;
+  animation: pulse-dot 0.9s ease-in-out infinite;
+  flex-shrink: 0;
 }
 
 .scanning-line {
-  position: absolute;
-  left: -10px;
-  right: -10px;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, var(--primary), transparent);
-  box-shadow: 0 0 10px var(--primary);
-  animation: scan-line-movement 2.5s ease-in-out infinite;
-  pointer-events: none;
+  display: none;
 }
 
 @keyframes scan-line-movement {
-  0%, 100% {
-    top: 5px;
-  }
-  50% {
-    top: 105px;
-  }
+  0%, 100% { top: 5px; }
+  50%       { top: 105px; }
 }
+
 
 /* File Details Stripe */
 .file-details-strip {
