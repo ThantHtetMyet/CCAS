@@ -30,12 +30,16 @@ export default function Home() {
   // Pagination & Scan Timer states
   const [currentPage, setCurrentPage] = useState(1);
   const [scanStartTime, setScanStartTime] = useState('');
+  const [scanEndTime, setScanEndTime] = useState('');
+  const [scanDuration, setScanDuration] = useState(0);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [estimatedCompleteTime, setEstimatedCompleteTime] = useState('');
-
+ 
   
   const fileInputRef = useRef(null);
   const progressIntervalRef = useRef(null);
+  const scanStartTimestampRef = useRef(null);
+
 
   // Status message transitions during scanning
   const statusSteps = [
@@ -137,8 +141,10 @@ export default function Home() {
     const now = new Date();
     const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     setScanStartTime(timeString);
+    scanStartTimestampRef.current = Date.now();
     
     // Estimate Ornith 35B average execution of 90 seconds
+
     const estDone = new Date(now.getTime() + 90 * 1000);
     const estDoneString = estDone.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     setEstimatedCompleteTime(estDoneString);
@@ -183,8 +189,18 @@ export default function Home() {
 
       const results = await response.json();
       
+      const endTicks = Date.now();
+      const startTicks = scanStartTimestampRef.current || endTicks;
+      const durationSeconds = Math.round((endTicks - startTicks) / 1000);
+      const end = new Date(endTicks);
+      const endTimeString = end.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      
+      setScanEndTime(endTimeString);
+      setScanDuration(durationSeconds);
+      
       // Clear ticker interval and complete to 100
       clearInterval(progressIntervalRef.current);
+
       
       // Finish progress to 100%
       setProgress(100);
@@ -211,9 +227,12 @@ export default function Home() {
     setAuditResult(null);
     setCurrentPage(1);
     setScanStartTime('');
+    setScanEndTime('');
+    setScanDuration(0);
     setElapsedSeconds(0);
     setEstimatedCompleteTime('');
   };
+
 
 
   // Generate printable PDF report with direct download bypassing print dialog
@@ -608,7 +627,7 @@ export default function Home() {
             const totalPages = Math.ceil(auditSections.length / sectionsPerPage);
             const displayedSections = auditSections.slice(
               (currentPage - 1) * sectionsPerPage,
-              currentPage * sectionsPerPage
+currentPage * sectionsPerPage
             );
 
 
@@ -616,15 +635,44 @@ export default function Home() {
               <div className="state-content fade-in">
 
                 {/* Header */}
-                <div className="success-header">
-                  <div className="success-icon-wrapper">
-                    <CheckCircle2 size={28} className="success-icon" />
+                <div className="success-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <div className="success-icon-wrapper">
+                      <CheckCircle2 size={28} className="success-icon" />
+                    </div>
+                    <div className="title-section">
+                      <h2 className="success-title" style={{ margin: 0 }}>Audit Report Generated</h2>
+                      <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: '0.2rem 0 0 0' }}>
+                        Analyzed: <strong>{file?.name}</strong>
+                      </p>
+                    </div>
                   </div>
-                  <div className="title-section" style={{ flex: 1 }}>
-                    <h2 className="success-title">Audit Report Generated</h2>
-                    <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                      Analyzed: <strong>{file?.name}</strong>
-                    </p>
+
+                  {/* Timing metrics on the right side */}
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.75rem',
+                    background: '#ffffff',
+                    border: '1.5px solid #e2e8f0',
+                    borderRadius: '8px',
+                    padding: '0.5rem 0.75rem',
+                    boxShadow: '0 1px 2px rgba(0,0,0,0.02)'
+                  }}>
+                    <div style={{ textAlign: 'right', borderRight: '1px solid #e2e8f0', paddingRight: '0.75rem' }}>
+                      <div style={{ fontSize: '0.6rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.5px' }}>Started</div>
+                      <div style={{ fontSize: '0.78rem', color: '#1e293b', fontWeight: 700, fontFamily: 'monospace' }}>{scanStartTime || '--:--:--'}</div>
+                    </div>
+                    <div style={{ textAlign: 'right', borderRight: '1px solid #e2e8f0', paddingRight: '0.75rem' }}>
+                      <div style={{ fontSize: '0.6rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.5px' }}>Finished</div>
+                      <div style={{ fontSize: '0.78rem', color: '#1e293b', fontWeight: 700, fontFamily: 'monospace' }}>{scanEndTime || '--:--:--'}</div>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={{ fontSize: '0.6rem', color: '#ea580c', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.5px' }}>Duration</div>
+                      <div style={{ fontSize: '0.78rem', color: '#ea580c', fontWeight: 800, fontFamily: 'monospace' }}>
+                        {scanDuration ? `${Math.floor(scanDuration / 60) > 0 ? `${Math.floor(scanDuration / 60)}m ` : ''}${scanDuration % 60}s` : '--s'}
+                      </div>
+                    </div>
                   </div>
                 </div>
 
