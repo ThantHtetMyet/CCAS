@@ -678,14 +678,15 @@ export default function Home() {
                         <span>Section 6.3 — Threat Hunting · not found</span>
                       </div>
                       {/* Active Blinking Scan Status Row */}
-                      <div className="scan-log-line" style={{ 
+                      <div className="scan-log-line active-pulse-row" style={{ 
                         flex: 1, 
                         padding: '0.8rem 1rem', 
                         margin: 0,
                         background: 'linear-gradient(90deg, #fff7ed 0%, #ffffff 100%)', 
                         display: 'flex', 
-                        alignItems: 'center', 
-                        animation: 'pulse-opacity 1s infinite alternate' 
+                        alignItems: 'center',
+                        borderBottomLeftRadius: '7px',
+                        borderBottomRightRadius: '7px'
                       }}>
                         <span className="log-tag warn">SCAN</span>
                         <span style={{ fontWeight: 600, color: '#ea580c' }}>
@@ -693,6 +694,7 @@ export default function Home() {
                         </span>
                         <span className="blinking-cursor">|</span>
                       </div>
+
                     </div>
                   </div>
                 </div>
