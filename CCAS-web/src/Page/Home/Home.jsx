@@ -239,6 +239,12 @@ export default function Home() {
   const downloadPdfReport = () => {
     if (!auditResult || !file) return;
 
+    // Calculate metrics for summary table
+    const totalSubs = auditSections.reduce((acc, s) => acc + (s.subsections?.length || 0), 0);
+    const compliantSubs = auditSections.reduce((acc, s) => acc + (s.subsections?.filter(sub => normalizeStatus(sub) === 'compliant').length || 0), 0);
+    const partialSubs = auditSections.reduce((acc, s) => acc + (s.subsections?.filter(sub => normalizeStatus(sub) === 'partial').length || 0), 0);
+    const nonSubs = totalSubs - compliantSubs - partialSubs;
+
     // Load html2pdf from CDN dynamically
     const loadHtml2Pdf = () => {
       return new Promise((resolve) => {
@@ -295,36 +301,89 @@ export default function Home() {
 
     const htmlContent = `
       <div style="font-family: 'Segoe UI', system-ui, sans-serif; padding: 25px; color: #0f172a; line-height: 1.5;">
-        <div class="header-container" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #ea580c; padding-bottom: 15px; margin-bottom: 25px;">
-          <div class="header-title">
-            <h1 style="font-size: 1.75rem; margin: 0; color: #0f172a; font-weight: 800;">CCAS Compliance Assessment Report</h1>
-            <p style="font-size: 0.82rem; color: #475569; margin: 4px 0 0 0;">Automated Cybersecurity Audit Matrix against CCoP v2.1 Standards</p>
-          </div>
-          <div class="score-circle" style="width: 75px; height: 75px; border-radius: 50%; border: 4px solid #fff7ed; background: #fff7ed; display: flex; flex-direction: column; align-items: center; justify-content: center; flex-shrink: 0;">
-            <span class="score-num" style="font-size: 1.5rem; font-weight: 800; color: #ea580c; line-height: 1;">${auditResult.compliance_percentage}%</span>
-            <span class="score-lbl" style="font-size: 0.55rem; color: #ea580c; text-transform: uppercase; font-weight: bold; margin-top: 2px;">Adherent</span>
-          </div>
-        </div>
-
-        <div class="meta-section" style="background-color: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 15px; margin-bottom: 25px; font-size: 0.82rem;">
-          <div class="meta-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
-            <div class="meta-item"><span class="meta-lbl" style="font-weight: bold; color: #475569; width: 130px; display: inline-block;">Target Document:</span><span class="meta-val" style="color: #0f172a;">${file.name}</span></div>
-            <div class="meta-item"><span class="meta-lbl" style="font-weight: bold; color: #475569; width: 130px; display: inline-block;">Assessment Date:</span><span class="meta-val" style="color: #0f172a;">${new Date().toLocaleDateString()}</span></div>
-            <div class="meta-item"><span class="meta-lbl" style="font-weight: bold; color: #475569; width: 130px; display: inline-block;">Document Size:</span><span class="meta-val" style="color: #0f172a;">${file.size}</span></div>
-            <div class="meta-item"><span class="meta-lbl" style="font-weight: bold; color: #475569; width: 130px; display: inline-block;">Regulatory Body:</span><span class="meta-val" style="color: #0f172a;">CCAS Compliance Engine</span></div>
-          </div>
-        </div>
-
-        <div class="checklist-title" style="font-size: 1.2rem; font-weight: 800; margin-bottom: 20px; color: #0f172a; border-bottom: 1.5px solid #e2e8f0; padding-bottom: 8px;">Standard Controls Checklist Audit</div>
         
-        <style>
-          .badge { padding: 3px 8px; border-radius: 4px; font-size: 0.72rem; font-weight: bold; text-transform: uppercase; white-space: nowrap; }
-          .badge.compliant { background-color: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
-          .badge.partial { background-color: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
-          .badge.non-compliant { background-color: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
-        </style>
+        <!-- PAGE 1: HEADER, METADATA & COMPLIANCE SUMMARY TABLE -->
+        <div style="page-break-after: always; min-height: 255mm; display: flex; flexDirection: column; justify-content: space-between;">
+          <div>
+            <div class="header-container" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #ea580c; padding-bottom: 15px; margin-bottom: 25px;">
+              <div class="header-title">
+                <h1 style="font-size: 1.75rem; margin: 0; color: #0f172a; font-weight: 800;">CCAS Compliance Assessment Report</h1>
+                <p style="font-size: 0.82rem; color: #475569; margin: 4px 0 0 0;">Automated Cybersecurity Audit Matrix against CCoP v2.1 Standards</p>
+              </div>
+              <div class="score-circle" style="width: 75px; height: 75px; border-radius: 50%; border: 4px solid #fff7ed; background: #fff7ed; display: flex; flex-direction: column; align-items: center; justify-content: center; flex-shrink: 0;">
+                <span class="score-num" style="font-size: 1.5rem; font-weight: 800; color: #ea580c; line-height: 1;">${auditResult.compliance_percentage}%</span>
+                <span class="score-lbl" style="font-size: 0.55rem; color: #ea580c; text-transform: uppercase; font-weight: bold; margin-top: 2px;">Adherent</span>
+              </div>
+            </div>
 
-        ${sectionsHtml}
+            <div class="meta-section" style="background-color: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 15px; margin-bottom: 30px; font-size: 0.82rem;">
+              <div class="meta-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+                <div class="meta-item"><span class="meta-lbl" style="font-weight: bold; color: #475569; width: 130px; display: inline-block;">Target Document:</span><span class="meta-val" style="color: #0f172a;">${file.name}</span></div>
+                <div class="meta-item"><span class="meta-lbl" style="font-weight: bold; color: #475569; width: 130px; display: inline-block;">Assessment Date:</span><span class="meta-val" style="color: #0f172a;">${new Date().toLocaleDateString()}</span></div>
+                <div class="meta-item"><span class="meta-lbl" style="font-weight: bold; color: #475569; width: 130px; display: inline-block;">Document Size:</span><span class="meta-val" style="color: #0f172a;">${file.size}</span></div>
+                <div class="meta-item"><span class="meta-lbl" style="font-weight: bold; color: #475569; width: 130px; display: inline-block;">Regulatory Body:</span><span class="meta-val" style="color: #0f172a;">CCAS Compliance Engine</span></div>
+              </div>
+            </div>
+
+            <div style="margin-top: 35px;">
+              <h2 style="font-size: 1.2rem; font-weight: 800; color: #0f172a; margin-bottom: 15px; border-bottom: 1.5px solid #e2e8f0; padding-bottom: 8px;">Executive Compliance Summary</h2>
+              <table style="width: 100%; border-collapse: collapse; border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden; font-size: 0.88rem;">
+                <thead>
+                  <tr style="background-color: #f8fafc; border-bottom: 2px solid #cbd5e1; text-align: left;">
+                    <th style="padding: 12px 15px; font-weight: bold; color: #334155; width: 50%;">Status Category</th>
+                    <th style="padding: 12px 15px; font-weight: bold; color: #334155; text-align: center; width: 25%;">Control Count</th>
+                    <th style="padding: 12px 15px; font-weight: bold; color: #334155; text-align: center; width: 25%;">Percentage</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr style="border-bottom: 1px solid #cbd5e1;">
+                    <td style="padding: 12px 15px; color: #0f172a; font-weight: 600;">
+                      <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: #10b981; margin-right: 8px; vertical-align: middle;"></span>
+                      Compliance
+                    </td>
+                    <td style="padding: 12px 15px; text-align: center; font-weight: 700; color: #065f46;">${compliantSubs}</td>
+                    <td style="padding: 12px 15px; text-align: center; color: #065f46; font-weight: 600;">${totalSubs ? Math.round((compliantSubs / totalSubs) * 100) : 0}%</td>
+                  </tr>
+                  <tr style="border-bottom: 1px solid #cbd5e1;">
+                    <td style="padding: 12px 15px; color: #0f172a; font-weight: 600;">
+                      <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: #f59e0b; margin-right: 8px; vertical-align: middle;"></span>
+                      Partial Compliance
+                    </td>
+                    <td style="padding: 12px 15px; text-align: center; font-weight: 700; color: #92400e;">${partialSubs}</td>
+                    <td style="padding: 12px 15px; text-align: center; color: #92400e; font-weight: 600;">${totalSubs ? Math.round((partialSubs / totalSubs) * 100) : 0}%</td>
+                  </tr>
+                  <tr style="border-bottom: 1px solid #cbd5e1;">
+                    <td style="padding: 12px 15px; color: #0f172a; font-weight: 600;">
+                      <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: #ef4444; margin-right: 8px; vertical-align: middle;"></span>
+                      Non-Compliance
+                    </td>
+                    <td style="padding: 12px 15px; text-align: center; font-weight: 700; color: #991b1b;">${nonSubs}</td>
+                    <td style="padding: 12px 15px; text-align: center; color: #991b1b; font-weight: 600;">${totalSubs ? Math.round((nonSubs / totalSubs) * 100) : 0}%</td>
+                  </tr>
+                  <tr style="background-color: #f8fafc; font-weight: bold; border-top: 2px solid #cbd5e1;">
+                    <td style="padding: 12px 15px; color: #0f172a;">Total Audited Controls</td>
+                    <td style="padding: 12px 15px; text-align: center; color: #0f172a;">${totalSubs}</td>
+                    <td style="padding: 12px 15px; text-align: center; color: #0f172a;">100%</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- PAGE 2+: DETAILED SECTION COMPLIANCE AUDIT -->
+        <div>
+          <div class="checklist-title" style="font-size: 1.2rem; font-weight: 800; margin-bottom: 20px; color: #0f172a; border-bottom: 1.5px solid #e2e8f0; padding-bottom: 8px;">Detailed Sections Breakdown</div>
+          
+          <style>
+            .badge { padding: 3px 8px; border-radius: 4px; font-size: 0.72rem; font-weight: bold; text-transform: uppercase; white-space: nowrap; }
+            .badge.compliant { background-color: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
+            .badge.partial { background-color: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+            .badge.non-compliant { background-color: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+          </style>
+
+          ${sectionsHtml}
+        </div>
       </div>
     `;
 
@@ -351,6 +410,7 @@ export default function Home() {
       });
     });
   };
+
 
 
   // Normalize subsection/section status
