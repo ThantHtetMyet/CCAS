@@ -56,15 +56,16 @@
   box-shadow: 0 20px 30px -10px rgba(15, 23, 42, 0.12), 0 10px 15px -10px rgba(15, 23, 42, 0.05);
 }
 
-/* Expand card on upload completion to show details clearly */
+/* Expand card on upload completion/scanning to show details clearly */
 .upload-container.glass-card.expanded {
-  max-width: 650px;
+  max-width: 1050px;
   padding: 2.5rem;
 }
 
 .portal-container:has(.expanded) .portal-header {
-  max-width: 650px;
+  max-width: 1050px;
 }
+
 
 /* Transitions */
 .state-content {
@@ -282,23 +283,24 @@
 /* ── Scan log panel ── */
 .scan-log-panel {
   width: 100%;
-  background: #0b1a2e;
-  border: 1px solid #1e3a5f;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
   border-radius: 8px;
-  padding: 0.6rem 0.75rem;
+  padding: 0.85rem 1rem;
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: 0.5rem;
   font-family: 'Courier New', monospace;
   overflow: hidden;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.02);
 }
 
 .scan-log-line {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  font-size: 0.72rem;
-  color: #64748b;
+  gap: 0.65rem;
+  font-size: 0.76rem;
+  color: #334155;
   animation: log-appear 3s ease-in-out infinite;
   white-space: nowrap;
   overflow: hidden;
@@ -308,20 +310,22 @@
 @keyframes log-appear {
   0%, 15%   { opacity: 0; transform: translateX(-6px); }
   25%, 75%  { opacity: 1; transform: translateX(0); }
-  90%, 100% { opacity: 0.3; }
+  90%, 100% { opacity: 0.4; }
 }
 
 .log-tag {
-  font-size: 0.6rem;
+  font-size: 0.62rem;
   font-weight: 800;
-  padding: 1px 5px;
-  border-radius: 3px;
+  padding: 2px 6px;
+  border-radius: 4px;
   flex-shrink: 0;
   letter-spacing: 0.5px;
 }
-.log-tag.ok   { background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.3); }
-.log-tag.warn { background: rgba(249,115,22,0.15);  color: #f97316; border: 1px solid rgba(249,115,22,0.3); }
-.log-tag.info { background: rgba(99,102,241,0.15);  color: #818cf8; border: 1px solid rgba(99,102,241,0.3); }
+.log-tag.ok   { background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
+.log-tag.warn { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+.log-tag.info { background: #e0e7ff; color: #3730a3; border: 1px solid #c7d2fe; }
+.log-tag.fail { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+
 
 /* Pulse spinner (small) */
 .pulse-spinner {
@@ -704,4 +708,19 @@
   color: var(--text-primary);
   border-color: #94a3b8;
   transform: translateY(-1px);
+}
+
+/* ── Two-Column Scanning Dashboard Grid ── */
+.scan-dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 1.5rem;
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .scan-dashboard-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
 }

@@ -454,7 +454,8 @@ export default function Home() {
       </header>
 
       <main className="portal-main">
-        <div className={`upload-container glass-card ${uploadState === 'completed' ? 'expanded' : ''}`}>
+        <div className={`upload-container glass-card ${uploadState === 'completed' || uploadState === 'scanning' ? 'expanded' : ''}`}>
+
           
           {/* 1. IDLE STATE: DRAG & DROP ZONE */}
           {uploadState === 'idle' && (
@@ -498,119 +499,141 @@ export default function Home() {
             </div>
           )}
 
-          {/* 2. SCANNING STATE: PROFESSIONAL CYBERSECURITY ANIMATION */}
+          {/* 2. SCANNING STATE: PROFESSIONAL WHITE-THEME ANIMATION */}
           {uploadState === 'scanning' && (
-            <div className="state-content fade-in" style={{ padding: 0, overflow: 'hidden', borderRadius: '12px' }}>
+            <div className="state-content fade-in" style={{ padding: 0, overflow: 'hidden', borderRadius: '12px', border: '1.5px solid #e2e8f0' }}>
 
-              {/* Dark header bar */}
+              {/* Light header bar */}
               <div style={{
-                background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
-                padding: '1.25rem 1.5rem',
-                borderBottom: '1px solid #334155'
+                background: 'linear-gradient(135deg, #fff7ed 0%, #fff 100%)',
+                padding: '1.1rem 1.5rem',
+                borderBottom: '1.5px solid #fed7aa'
               }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.3rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.25rem' }}>
                   <span style={{
                     width: '8px', height: '8px', borderRadius: '50%',
-                    background: '#f97316', boxShadow: '0 0 10px #f97316',
-                    animation: 'pulse-dot 1.2s ease-in-out infinite'
+                    background: '#f97316', boxShadow: '0 0 8px #f9731680',
+                    animation: 'pulse-dot 1.2s ease-in-out infinite',
+                    flexShrink: 0
                   }} />
-                  <span style={{ color: '#f97316', fontSize: '0.7rem', fontWeight: 700, letterSpacing: '2px', textTransform: 'uppercase' }}>
+                  <span style={{ color: '#ea580c', fontSize: '0.65rem', fontWeight: 800, letterSpacing: '2px', textTransform: 'uppercase' }}>
                     AI Compliance Engine · Active
                   </span>
                 </div>
-                <h2 style={{ color: '#f8fafc', fontSize: '1.15rem', fontWeight: 800, margin: 0 }}>Analyzing Document</h2>
-                <p style={{ color: '#64748b', fontSize: '0.78rem', margin: '0.2rem 0 0 0' }}>
-                  Semantic audit running against CCoP v2.1 · {file?.name}
+                <h2 style={{ color: '#1e293b', fontSize: '1.1rem', fontWeight: 800, margin: 0 }}>Analyzing Document</h2>
+                <p style={{ color: '#94a3b8', fontSize: '0.75rem', margin: '0.15rem 0 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  Semantic audit against CCoP v2.1 · {file?.name}
                 </p>
               </div>
 
-              {/* Central scanner animation */}
+              {/* White scanner body containing two-column dashboard grid */}
               <div style={{
-                background: '#0a1628',
-                padding: '1.5rem',
+                background: '#f8fafc',
+                padding: '1.75rem 2rem',
                 display: 'flex',
                 flexDirection: 'column',
-                alignItems: 'center',
-                gap: '1.25rem'
+                gap: '1.5rem'
               }}>
-
-                {/* Radar scanner graphic */}
-                <div className="radar-container">
-                  {/* Outer ring */}
-                  <div className="radar-ring radar-ring-1" />
-                  <div className="radar-ring radar-ring-2" />
-                  <div className="radar-ring radar-ring-3" />
-                  {/* Crosshairs */}
-                  <div className="radar-crosshair radar-crosshair-h" />
-                  <div className="radar-crosshair radar-crosshair-v" />
-                  {/* Sweeping beam */}
-                  <div className="radar-sweep" />
-                  {/* Center dot */}
-                  <div className="radar-center" />
-                  {/* Blip dots */}
-                  <div className="radar-blip" style={{ top: '22%', left: '62%', animationDelay: '0.4s' }} />
-                  <div className="radar-blip" style={{ top: '65%', left: '30%', animationDelay: '1.1s' }} />
-                  <div className="radar-blip" style={{ top: '40%', left: '75%', animationDelay: '1.8s' }} />
-                  <div className="radar-blip" style={{ top: '70%', left: '60%', animationDelay: '0.9s' }} />
-                  {/* Shield icon center */}
+                
+                <div className="scan-dashboard-grid">
+                  
+                  {/* Left Column: Radar and Progress Details */}
                   <div style={{
-                    position: 'absolute', inset: 0, display: 'flex',
-                    alignItems: 'center', justifyContent: 'center', zIndex: 5
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '1.25rem',
+                    background: '#ffffff',
+                    border: '1.5px solid #e2e8f0',
+                    borderRadius: '8px',
+                    padding: '1.5rem'
                   }}>
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#f97316" strokeWidth="1.5" style={{ filter: 'drop-shadow(0 0 6px #f97316)' }}>
-                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                    </svg>
-                  </div>
-                </div>
+                    {/* Radar — light theme */}
+                    <div className="radar-container">
+                      <div className="radar-ring radar-ring-1" />
+                      <div className="radar-ring radar-ring-2" />
+                      <div className="radar-ring radar-ring-3" />
+                      <div className="radar-crosshair radar-crosshair-h" />
+                      <div className="radar-crosshair radar-crosshair-v" />
+                      <div className="radar-sweep" />
+                      <div className="radar-center" />
+                      <div className="radar-blip" style={{ top: '22%', left: '62%', animationDelay: '0.4s' }} />
+                      <div className="radar-blip" style={{ top: '65%', left: '30%', animationDelay: '1.1s' }} />
+                      <div className="radar-blip" style={{ top: '40%', left: '75%', animationDelay: '1.8s' }} />
+                      <div className="radar-blip" style={{ top: '70%', left: '60%', animationDelay: '0.9s' }} />
+                      <div style={{
+                        position: 'absolute', inset: 0, display: 'flex',
+                        alignItems: 'center', justifyContent: 'center', zIndex: 5
+                      }}>
+                        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#f97316" strokeWidth="1.8" style={{ filter: 'drop-shadow(0 0 5px #f9731688)' }}>
+                          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                        </svg>
+                      </div>
+                    </div>
 
-                {/* Scrolling log lines */}
-                <div className="scan-log-panel">
-                  <div className="scan-log-line" style={{ animationDelay: '0s' }}>
-                    <span className="log-tag ok">PASS</span> Section 3.1 — Leadership and Oversight · matched
-                  </div>
-                  <div className="scan-log-line" style={{ animationDelay: '0.6s' }}>
-                    <span className="log-tag warn">EVAL</span> Section 5.1 — Access Control · analyzing...
-                  </div>
-                  <div className="scan-log-line" style={{ animationDelay: '1.2s' }}>
-                    <span className="log-tag info">SCAN</span> Section 8.2 — BCP/DRP · cross-referencing...
-                  </div>
-                  <div className="scan-log-line" style={{ animationDelay: '1.8s' }}>
-                    <span className="log-tag ok">PASS</span> Section 9.1 — Awareness Programme · confirmed
-                  </div>
-                  <div className="scan-log-line" style={{ animationDelay: '2.4s' }}>
-                    <span className="log-tag warn">EVAL</span> Section 6.2 — Monitoring & Detection · pending
-                  </div>
-                </div>
+                    {/* Status message details */}
+                    <div style={{
+                      display: 'flex', alignItems: 'center', gap: '0.5rem',
+                      background: '#f8fafc', border: '1px solid #cbd5e1',
+                      borderRadius: '8px', padding: '0.6rem 0.9rem', width: '100%'
+                    }}>
+                      <div className="pulse-spinner" />
+                      <span style={{ color: '#475569', fontSize: '0.78rem', fontFamily: 'monospace', fontWeight: 600 }}>
+                        {statusMessage || 'Initializing AI audit engine...'}
+                      </span>
+                      <span style={{ marginLeft: 'auto', color: '#ea580c', fontSize: '0.78rem', fontWeight: 700, fontFamily: 'monospace' }}>
+                        {progress}%
+                      </span>
+                    </div>
 
-                {/* Status message */}
-                <div style={{
-                  display: 'flex', alignItems: 'center', gap: '0.5rem',
-                  background: '#0f172a', border: '1px solid #1e3a5f',
-                  borderRadius: '8px', padding: '0.6rem 1rem', width: '100%'
-                }}>
-                  <div className="pulse-spinner" />
-                  <span style={{ color: '#94a3b8', fontSize: '0.78rem', fontFamily: 'monospace' }}>
-                    {statusMessage || 'Initializing AI audit engine...'}
-                  </span>
-                  <span style={{ marginLeft: 'auto', color: '#f97316', fontSize: '0.78rem', fontWeight: 700, fontFamily: 'monospace' }}>
-                    {progress}%
-                  </span>
-                </div>
+                    {/* Segmented progress bar */}
+                    <div style={{ display: 'flex', gap: '3px', height: '6px', width: '100%' }}>
+                      {Array.from({ length: 20 }).map((_, i) => (
+                        <div key={i} style={{
+                          flex: 1, borderRadius: '2px',
+                          background: (i / 20) * 100 < progress ? '#f97316' : '#e2e8f0',
+                          boxShadow: (i / 20) * 100 < progress ? '0 0 4px #f9731666' : 'none',
+                          transition: 'background 0.3s ease'
+                        }} />
+                      ))}
+                    </div>
+                  </div>
 
-                {/* Segmented progress bar */}
-                <div style={{ width: '100%' }}>
+                  {/* Right Column: High-contrast colorful logs */}
                   <div style={{
-                    display: 'flex', gap: '3px', height: '6px'
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.75rem'
                   }}>
-                    {Array.from({ length: 20 }).map((_, i) => (
-                      <div key={i} style={{
-                        flex: 1, borderRadius: '2px',
-                        background: (i / 20) * 100 < progress ? '#f97316' : '#1e293b',
-                        boxShadow: (i / 20) * 100 < progress ? '0 0 4px #f9731688' : 'none',
-                        transition: 'background 0.3s ease'
-                      }} />
-                    ))}
+                    <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                      Audit Process Logs
+                    </div>
+                    {/* Log panel — white */}
+                    <div className="scan-log-panel" style={{ flex: 1, minHeight: '235px' }}>
+                      <div className="scan-log-line" style={{ animationDelay: '0s' }}>
+                        <span className="log-tag ok">PASS</span>
+                        <span>Section 3.1 — Leadership and Oversight · matched</span>
+                      </div>
+                      <div className="scan-log-line" style={{ animationDelay: '0.6s' }}>
+                        <span className="log-tag warn">EVAL</span>
+                        <span>Section 5.1 — Access Control · analyzing...</span>
+                      </div>
+                      <div className="scan-log-line" style={{ animationDelay: '1.2s' }}>
+                        <span className="log-tag info">SCAN</span>
+                        <span>Section 8.2 — BCP/DRP · cross-referencing...</span>
+                      </div>
+                      <div className="scan-log-line" style={{ animationDelay: '1.8s' }}>
+                        <span className="log-tag ok">PASS</span>
+                        <span>Section 9.1 — Awareness Programme · confirmed</span>
+                      </div>
+                      <div className="scan-log-line" style={{ animationDelay: '2.4s' }}>
+                        <span className="log-tag fail">FAIL</span>
+                        <span>Section 6.3 — Threat Hunting · not found</span>
+                      </div>
+                    </div>
                   </div>
+
                 </div>
 
               </div>
@@ -619,6 +642,7 @@ export default function Home() {
 
 
           {/* 3. COMPLETED STATE: COLLAPSIBLE SECTION BARS */}
+
           {uploadState === 'completed' && auditResult && (() => {
             const pct = auditResult.compliance_percentage ?? 0;
             const pctColor = pct >= 85 ? '#10b981' : pct >= 60 ? '#f59e0b' : '#ef4444';
