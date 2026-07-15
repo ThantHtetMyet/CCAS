@@ -134,23 +134,23 @@ def analyze_compliance():
         "Return a JSON format exactly as follows, with no additional formatting, introduction, markdown blocks, or wraps:\n"
         "{\n"
         '  "compliance_percentage": 78,\n'
-        '  "gaps": [\n'
+        '  "all_sections": [\n'
+        '    {\n'
+        '      "id": "A.1",\n'
+        '      "title": "Cybersecurity Governance and Leadership",\n'
+        '      "compliant": true,\n'
+        '      "description": "Proof from the plan showing they defined steering roles."\n'
+        '    },\n'
         '    {\n'
         '      "id": "A.2",\n'
         '      "title": "Asset Management",\n'
+        '      "compliant": false,\n'
         '      "description": "Detailed explanation of what section is missing or wrong in the plan.",\n'
-        '      "level": "high",\n'
-        '      "proposed_solution": "Remediation step or solution description to fix this gap."\n'
-        "    }\n"
-        "  ],\n"
-        '  "matches": [\n'
-        '    {\n'
-        '      "id": "A.1",\n'
-        '      "title": "Governance",\n'
-        '      "description": "Proof from the plan showing they defined steering roles."\n'
-        "    }\n"
-        "  ]\n"
+        '      "proposed_solution": "Remediation step or solution description to fix this gap and comply."\n'
+        '    }\n'
+        '  ]\n'
         "}\n"
+        "Be sure to audit and list EVERY SINGLE reference control provided in the prompt. "
         "Do not include any extra chat dialogue. Output ONLY raw JSON."
     )
 

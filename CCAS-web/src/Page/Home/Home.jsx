@@ -8,9 +8,8 @@ import {
   Lock,
   ShieldCheck,
   RefreshCw,
-  Info,
-  ExternalLink,
-  BookOpen
+  Download,
+  Info
 } from 'lucide-react';
 import './Home.css';
 
@@ -24,7 +23,6 @@ export default function Home() {
   
   // Real API audit result state
   const [auditResult, setAuditResult] = useState(null);
-  const [activeTab, setActiveTab] = useState('gaps'); // gaps | matches
   
   const fileInputRef = useRef(null);
   const progressIntervalRef = useRef(null);
@@ -174,6 +172,237 @@ export default function Home() {
     setAuditResult(null);
   };
 
+  // Generate printable PDF report using iframe print window
+  const downloadPdfReport = () => {
+    if (!auditResult || !file) return;
+
+    // Resolve unified list of sections from the API payload (with fallback parsing)
+    const allSections = auditResult.all_sections || [
+      ...(auditResult.matches || []).map(m => ({ ...m, compliant: true })),
+      ...(auditResult.gaps || []).map(g => ({ ...g, compliant: false }))
+    ].sort((a, b) => a.id.localeCompare(b.id));
+
+    const printWindow = window.open('', '_blank');
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>CCAS Compliance Report - ${file.name}</title>
+          <style>
+            body {
+              font-family: 'Segoe UI', system-ui, sans-serif;
+              padding: 40px;
+              color: #0f172a;
+              background-color: #ffffff;
+              line-height: 1.5;
+            }
+            .header-container {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              border-bottom: 2px solid #f97316;
+              padding-bottom: 15px;
+              margin-bottom: 25px;
+            }
+            .header-title h1 {
+              font-size: 1.8rem;
+              margin: 0;
+              color: #0f172a;
+            }
+            .header-title p {
+              font-size: 0.85rem;
+              color: #475569;
+              margin: 4px 0 0 0;
+            }
+            .score-circle {
+              width: 75px;
+              height: 75px;
+              border-radius: 50%;
+              border: 4px solid #fff7ed;
+              background: #fff7ed;
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              justify-content: center;
+            }
+            .score-num {
+              font-size: 1.5rem;
+              font-weight: 800;
+              color: #ea580c;
+              line-height: 1;
+            }
+            .score-lbl {
+              font-size: 0.55rem;
+              color: #ea580c;
+              text-transform: uppercase;
+              font-weight: bold;
+              margin-top: 2px;
+            }
+            .meta-section {
+              background-color: #f8fafc;
+              border: 1px solid #e2e8f0;
+              border-radius: 8px;
+              padding: 15px;
+              margin-bottom: 25px;
+              font-size: 0.85rem;
+            }
+            .meta-grid {
+              display: grid;
+              grid-template-columns: repeat(2, 1fr);
+              gap: 10px;
+            }
+            .meta-item {
+              display: flex;
+              gap: 8px;
+            }
+            .meta-lbl {
+              font-weight: bold;
+              color: #475569;
+              width: 130px;
+            }
+            .meta-val {
+              color: #0f172a;
+            }
+            .checklist-title {
+              font-size: 1.25rem;
+              font-weight: 700;
+              margin-bottom: 15px;
+              color: #0f172a;
+              border-bottom: 1px solid #e2e8f0;
+              padding-bottom: 8px;
+            }
+            .section-row {
+              border: 1px solid #e2e8f0;
+              border-radius: 8px;
+              padding: 15px;
+              margin-bottom: 15px;
+              page-break-inside: avoid;
+            }
+            .section-header {
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              margin-bottom: 8px;
+            }
+            .section-name {
+              font-weight: bold;
+              font-size: 1rem;
+              color: #0f172a;
+            }
+            .badge {
+              padding: 3px 8px;
+              border-radius: 4px;
+              font-size: 0.75rem;
+              font-weight: bold;
+              text-transform: uppercase;
+            }
+            .badge.compliant {
+              background-color: #d1fae5;
+              color: #065f46;
+            }
+            .badge.non-compliant {
+              background-color: #fff7ed;
+              color: #c2410c;
+            }
+            .desc {
+              font-size: 0.85rem;
+              color: #334155;
+              margin: 0;
+            }
+            .remediation {
+              margin-top: 10px;
+              padding: 10px;
+              background-color: #fffbeb;
+              border-left: 3px solid #f59e0b;
+              border-radius: 4px;
+              font-size: 0.85rem;
+            }
+            .remediation strong {
+              display: block;
+              color: #b45309;
+              font-size: 0.75rem;
+              text-transform: uppercase;
+              margin-bottom: 3px;
+            }
+            .remediation p {
+              margin: 0;
+              color: #78350f;
+            }
+            @media print {
+              body { padding: 0; }
+              .no-print { display: none; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header-container">
+            <div class="header-title">
+              <h1>CCAS Compliance Assessment Report</h1>
+              <p>Automated Cybersecurity Audit Matrix against CCoP v2.1 Standards</p>
+            </div>
+            <div class="score-circle">
+              <span class="score-num">${auditResult.compliance_percentage}%</span>
+              <span class="score-lbl">Adherent</span>
+            </div>
+          </div>
+          <div class="meta-section">
+            <div class="meta-grid">
+              <div class="meta-item">
+                <span class="meta-lbl">Target Document:</span>
+                <span class="meta-val">${file.name}</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-lbl">Assessment Date:</span>
+                <span class="meta-val">${new Date().toLocaleDateString()}</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-lbl">Document Size:</span>
+                <span class="meta-val">${file.size}</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-lbl">Regulatory Body:</span>
+                <span class="meta-val">CCAS Compliance Engine</span>
+              </div>
+            </div>
+          </div>
+          <div class="checklist-title">Standard Controls Checklist Audit</div>
+          ${allSections.map(sec => `
+            <div class="section-row">
+              <div class="section-header">
+                <span class="section-name">${sec.id} - ${sec.title}</span>
+                <span class="badge ${sec.compliant ? 'compliant' : 'non-compliant'}">
+                  ${sec.compliant ? 'Compliant' : 'Non-Compliant'}
+                </span>
+              </div>
+              <p class="desc">${sec.description}</p>
+              ${!sec.compliant && sec.proposed_solution ? `
+                <div class="remediation">
+                  <strong>Proposed Solution to Comply:</strong>
+                  <p>${sec.proposed_solution}</p>
+                </div>
+              ` : ''}
+            </div>
+          `).join('')}
+        </body>
+      </html>
+    `;
+    printWindow.document.write(html);
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => {
+      printWindow.print();
+      printWindow.close();
+    }, 500);
+  };
+
+  // Compile full sorted list of all standard controls for UI display
+  const allSections = auditResult ? (
+    auditResult.all_sections || [
+      ...(auditResult.matches || []).map(m => ({ ...m, compliant: true })),
+      ...(auditResult.gaps || []).map(g => ({ ...g, compliant: false }))
+    ]
+  ).sort((a, b) => a.id.localeCompare(b.id)) : [];
+
   return (
     <div className="portal-container">
       {/* Mini top brand bar */}
@@ -192,7 +421,7 @@ export default function Home() {
             <div className="state-content fade-in">
               <div className="title-section">
                 <h2>Cybersecurity Plan Uploader</h2>
-                <p>Upload your cybersecurity plan to analyze its compliance against CCoP v2.1 standards using local Qwen AI.</p>
+                <p>Upload your plan document to review compliance rules and map adherence parameters against CCoP v2.1.</p>
               </div>
 
               <div 
@@ -301,82 +530,46 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Tabs for details list */}
-              <div className="tabs-container">
-                <button 
-                  className={`tab-btn ${activeTab === 'gaps' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('gaps')}
-                >
-                  Identified Gaps ({auditResult.gaps ? auditResult.gaps.length : 0})
-                </button>
-                <button 
-                  className={`tab-btn ${activeTab === 'matches' ? 'active' : ''}`}
-                  onClick={() => setActiveTab('matches')}
-                >
-                  Compliant Controls ({auditResult.matches ? auditResult.matches.length : 0})
-                </button>
+              {/* Checklist list title */}
+              <div className="section-title-wrapper">
+                <Info size={16} style={{ color: 'var(--primary)' }} />
+                <h4>Control Checklist Assessment ({allSections.length} sections)</h4>
               </div>
 
-              {/* Tab results list */}
+              {/* Checklist items list */}
               <div className="list-wrapper">
-                {activeTab === 'gaps' && (
-                  (!auditResult.gaps || auditResult.gaps.length === 0) ? (
-                    <div className="empty-tab-state">
-                      <ShieldCheck size={28} className="success-icon" />
-                      <p>No gaps identified! Your plan fully complies with CCoP requirements.</p>
-                    </div>
-                  ) : (
-                    <div className="items-list">
-                      {auditResult.gaps.map((gap, index) => (
-                        <div key={index} className="list-card gap-card">
-                          <div className="card-header">
-                            <div className="card-badge" style={{
-                              color: gap.level === 'high' ? 'var(--danger)' : 'var(--primary)',
-                              background: gap.level === 'high' ? 'var(--danger-glow)' : 'var(--primary-glow)'
-                            }}>
-                              {gap.id || 'GAP'} • {gap.level || 'medium'} severity
-                            </div>
-                            <h5>{gap.title}</h5>
-                          </div>
-                          <p className="card-desc">{gap.description}</p>
-                          {gap.proposed_solution && (
-                            <div className="remediation-box">
-                              <strong>Proposed Solution:</strong>
-                              <p>{gap.proposed_solution}</p>
-                            </div>
-                          )}
+                <div className="items-list">
+                  {allSections.map((sec, index) => (
+                    <div key={index} className={`list-card ${sec.compliant ? 'match-card' : 'gap-card'}`}>
+                      <div className="card-header">
+                        <div className={`card-badge ${sec.compliant ? 'success' : ''}`} style={{
+                          color: sec.compliant ? 'var(--success)' : 'var(--primary)',
+                          background: sec.compliant ? 'var(--success-glow)' : 'var(--primary-glow)'
+                        }}>
+                          {sec.id || 'SECTION'} • {sec.compliant ? 'COMPLIANT' : 'NON-COMPLIANT'}
                         </div>
-                      ))}
-                    </div>
-                  )
-                )}
-
-                {activeTab === 'matches' && (
-                  (!auditResult.matches || auditResult.matches.length === 0) ? (
-                    <div className="empty-tab-state">
-                      <AlertTriangle size={28} style={{ color: 'var(--text-muted)' }} />
-                      <p>No compliant controls mapped in the analysis.</p>
-                    </div>
-                  ) : (
-                    <div className="items-list">
-                      {auditResult.matches.map((match, index) => (
-                        <div key={index} className="list-card match-card">
-                          <div className="card-header">
-                            <div className="card-badge success">
-                              {match.id || 'OK'} • Compliant
-                            </div>
-                            <h5>{match.title}</h5>
-                          </div>
-                          <p className="card-desc">{match.description}</p>
+                        <h5>{sec.title}</h5>
+                      </div>
+                      <p className="card-desc">{sec.description}</p>
+                      
+                      {/* Proposed solution for non-compliant areas */}
+                      {!sec.compliant && sec.proposed_solution && (
+                        <div className="remediation-box fade-in">
+                          <strong>Proposed Solution to Comply:</strong>
+                          <p>{sec.proposed_solution}</p>
                         </div>
-                      ))}
+                      )}
                     </div>
-                  )
-                )}
+                  ))}
+                </div>
               </div>
 
-              <div className="button-group">
-                <button className="btn-reset" onClick={resetUploader}>
+              <div className="button-group" style={{ display: 'flex', gap: '1rem' }}>
+                <button className="btn-secondary" onClick={downloadPdfReport} style={{ flex: 1 }}>
+                  <Download size={14} />
+                  <span>Download PDF Report</span>
+                </button>
+                <button className="btn-reset" onClick={resetUploader} style={{ flex: 1 }}>
                   <RefreshCw size={14} />
                   <span>Analyze Another Plan</span>
                 </button>

@@ -581,3 +581,39 @@
   border-color: var(--primary-hover);
   transform: translateY(-1px);
 }
+
+.section-title-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  color: var(--text-primary);
+}
+
+.section-title-wrapper h4 {
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.btn-secondary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: var(--bg-secondary);
+  border: 1px solid #cbd5e1;
+  color: var(--text-secondary);
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-secondary:hover {
+  background-color: #f8fafc;
+  color: var(--text-primary);
+  border-color: #94a3b8;
+  transform: translateY(-1px);
+}
