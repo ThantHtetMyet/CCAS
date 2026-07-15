@@ -1,0 +1,122 @@
+[
+  {
+    "instruction": "Analyze the compliance of a cybersecurity plan section against CCoP v2.1 Control A.1: Cybersecurity Governance and Leadership.",
+    "input": "Control standard requirements: 3 ---\nPage 2 of 64 \n \nCYBERSECURITY ACT 2018 \nCYBERSECURITY CODE OF PRACTICE  \nFOR CRITICAL INFORMATION INFRASTRUCTURE  \nSECOND EDITION REVISION ONE \n1 PRELIMINARY .............................................................................................................. 5 \n1.1 Citation and Comme\nPlan text: 'Our network contains firewalls and access logs. Multi-factor authentication is not yet globally configured.'",
+    "output": "Compliance: Non-Compliant.\nGap: Multi-factor authentication (MFA) is missing. CCoP Control A.1 requires MFA for administrative controls.\nProposed Solution: Enforce global MFA requirements across all administrative entry points."
+  },
+  {
+    "instruction": "What are the compliance requirements for CCoP v2.1 Cybersecurity Governance and Leadership (A.1)?",
+    "input": "",
+    "output": "The compliance requirements for Cybersecurity Governance and Leadership under CCoP v2.1 are as follows: 3 ---\nPage 2 of 64 \n \nCYBERSECURITY ACT 2018 \nCYBERSECURITY CODE OF PRACTICE  \nFOR CRITICAL INFORMATION INFRASTRUCTURE  \nSECOND EDITION REVISION ONE \n1 PRELIMINARY .............................................................................................................. 5 \n1.1 Citation and Commencement ...................................................................................... 5 \n1.2 Glossary and Interpretation ......................................................................................... 5 \n1.3 Purpose of this Code .................................................................................................. 12 \n1.4 Legal Effect of this Code ........................................................................................... 12 \n1.5 Recurring Requireme..."
+  },
+  {
+    "instruction": "Propose a solution for a gap in CCoP v2.1 Control A.1 (Cybersecurity Governance and Leadership) regarding missing inventory registers.",
+    "input": "Gap: The organization does not maintain a central security asset inventory list.",
+    "output": "Proposed Solution: Deploy an automated CMDB (Configuration Management Database) or centralized inventory spreadsheet. Assign asset owners, log serial numbers, and tag assets with network identifiers to satisfy CCoP Asset Management mandates."
+  },
+  {
+    "instruction": "Analyze the compliance of a cybersecurity plan section against CCoP v2.1 Control A.2: Asset Management.",
+    "input": "Control standard requirements: 25 ---\nPage 24 of 64 \n \n4 IDENTIFICATION REQUIREMENTS \nIdentification requirements aim to assist the CIIO in understanding and identifying the \nresources and assets supporting the CIIO’s critical business functions in delivering essential \nservices, and the associated cybersecurity risks. It enables\nPlan text: 'Our network contains firewalls and access logs. Multi-factor authentication is not yet globally configured.'",
+    "output": "Compliance: Non-Compliant.\nGap: Multi-factor authentication (MFA) is missing. CCoP Control A.2 requires MFA for administrative controls.\nProposed Solution: Enforce global MFA requirements across all administrative entry points."
+  },
+  {
+    "instruction": "What are the compliance requirements for CCoP v2.1 Asset Management (A.2)?",
+    "input": "",
+    "output": "The compliance requirements for Asset Management under CCoP v2.1 are as follows: 25 ---\nPage 24 of 64 \n \n4 IDENTIFICATION REQUIREMENTS \nIdentification requirements aim to assist the CIIO in understanding and identifying the \nresources and assets supporting the CIIO’s critical business functions in delivering essential \nservices, and the associated cybersecurity risks. It enables the CIIO to focus and prioritise its \nefforts in protecting these assets. \n4.1 Asset Management  \nAsset management includes creating and maintaining  a comprehensive inventory of all CII \nassets, including hardware, software, assets’ dependencies, and connections with any systems \nor networks. This is a key component in  ensuring cybersecurity as it provides visibility of CII \nassets and allows operators to make informed decisions and prioritise assets for protection. In \naddition, change s to ..."
+  },
+  {
+    "instruction": "Propose a solution for a gap in CCoP v2.1 Control A.2 (Asset Management) regarding missing inventory registers.",
+    "input": "Gap: The organization does not maintain a central security asset inventory list.",
+    "output": "Proposed Solution: Deploy an automated CMDB (Configuration Management Database) or centralized inventory spreadsheet. Assign asset owners, log serial numbers, and tag assets with network identifiers to satisfy CCoP Asset Management mandates."
+  },
+  {
+    "instruction": "Analyze the compliance of a cybersecurity plan section against CCoP v2.1 Control A.4: Access Control.",
+    "input": "Control standard requirements: 27 ---\nPage 26 of 64 \n \n5 PROTECTION REQUIREMENTS \nProtection requirements help the CIIO understand and implement the required people, process, \nand technology controls to protect the CII and to limit and contain the impact of cybersecurity \nincidents. \n5.1 Access Control  \nAccess control involves s\nPlan text: 'Our network contains firewalls and access logs. Multi-factor authentication is not yet globally configured.'",
+    "output": "Compliance: Non-Compliant.\nGap: Multi-factor authentication (MFA) is missing. CCoP Control A.4 requires MFA for administrative controls.\nProposed Solution: Enforce global MFA requirements across all administrative entry points."
+  },
+  {
+    "instruction": "What are the compliance requirements for CCoP v2.1 Access Control (A.4)?",
+    "input": "",
+    "output": "The compliance requirements for Access Control under CCoP v2.1 are as follows: 27 ---\nPage 26 of 64 \n \n5 PROTECTION REQUIREMENTS \nProtection requirements help the CIIO understand and implement the required people, process, \nand technology controls to protect the CII and to limit and contain the impact of cybersecurity \nincidents. \n5.1 Access Control  \nAccess control involves safeguarding CII assets from unauthorised access. By deploying access \nmanagement mechanisms and processes, the CIIO ensure that only authorised parties can  \naccess protected systems, information and applications . Access control includes the steps of \nIdentification, Authentication and Authorisation. \n \n5.1.1 The CIIO shall ensure that access to the CII and between parts of the CII is restricted \nto authorised personnel, activities, processes and devices.  \n \n5.1.2 With respect to the CIIO’s ob..."
+  },
+  {
+    "instruction": "Propose a solution for a gap in CCoP v2.1 Control A.4 (Access Control) regarding missing inventory registers.",
+    "input": "Gap: The organization does not maintain a central security asset inventory list.",
+    "output": "Proposed Solution: Deploy an automated CMDB (Configuration Management Database) or centralized inventory spreadsheet. Assign asset owners, log serial numbers, and tag assets with network identifiers to satisfy CCoP Asset Management mandates."
+  },
+  {
+    "instruction": "Analyze the compliance of a cybersecurity plan section against CCoP v2.1 Control A.5: Communications and Operations Security.",
+    "input": "Control standard requirements: 4 ---\nPage 3 of 64 \n \n5.9 System Hardening...................................................................................................... 32 \n5.10 Patch Management .................................................................................................... 34 \n5.11 Portable Computing \nPlan text: 'Our network contains firewalls and access logs. Multi-factor authentication is not yet globally configured.'",
+    "output": "Compliance: Non-Compliant.\nGap: Multi-factor authentication (MFA) is missing. CCoP Control A.5 requires MFA for administrative controls.\nProposed Solution: Enforce global MFA requirements across all administrative entry points."
+  },
+  {
+    "instruction": "What are the compliance requirements for CCoP v2.1 Communications and Operations Security (A.5)?",
+    "input": "",
+    "output": "The compliance requirements for Communications and Operations Security under CCoP v2.1 are as follows: 4 ---\nPage 3 of 64 \n \n5.9 System Hardening...................................................................................................... 32 \n5.10 Patch Management .................................................................................................... 34 \n5.11 Portable Computing Devices and Removable Storage Media ................................... 35 \n5.12 Application Security .................................................................................................. 36 \n5.13 Database Security ...................................................................................................... 37 \n5.14 Vulnerability Assessment .......................................................................................... 38 \n5.15 Penetration Testing .................."
+  },
+  {
+    "instruction": "Propose a solution for a gap in CCoP v2.1 Control A.5 (Communications and Operations Security) regarding missing inventory registers.",
+    "input": "Gap: The organization does not maintain a central security asset inventory list.",
+    "output": "Proposed Solution: Deploy an automated CMDB (Configuration Management Database) or centralized inventory spreadsheet. Assign asset owners, log serial numbers, and tag assets with network identifiers to satisfy CCoP Asset Management mandates."
+  },
+  {
+    "instruction": "Analyze the compliance of a cybersecurity plan section against CCoP v2.1 Control A.7: Cybersecurity Incident Management.",
+    "input": "Control standard requirements: 48 ---\nPage 47 of 64 \n \n7 RESPONSE AND RECOVERY REQUIREMENTS  \nEstablishing, managing, and exercising cybersecurity incident response plan s and crisis \ncommunication plans to prepare the CII for cybersecurity incidents.  \n7.1 Incident Management  \nIncident management seeks to minimise the impact of\nPlan text: 'Our network contains firewalls and access logs. Multi-factor authentication is not yet globally configured.'",
+    "output": "Compliance: Non-Compliant.\nGap: Multi-factor authentication (MFA) is missing. CCoP Control A.7 requires MFA for administrative controls.\nProposed Solution: Enforce global MFA requirements across all administrative entry points."
+  },
+  {
+    "instruction": "What are the compliance requirements for CCoP v2.1 Cybersecurity Incident Management (A.7)?",
+    "input": "",
+    "output": "The compliance requirements for Cybersecurity Incident Management under CCoP v2.1 are as follows: 48 ---\nPage 47 of 64 \n \n7 RESPONSE AND RECOVERY REQUIREMENTS  \nEstablishing, managing, and exercising cybersecurity incident response plan s and crisis \ncommunication plans to prepare the CII for cybersecurity incidents.  \n7.1 Incident Management  \nIncident management seeks to minimise the impact of cybersecurity incidents through \nprocesses that include the identification, containment and eradication of cybersecurity threats, \nand the recovery of systems, root -cause analysis and implementation of corrective actions to \nprevent recurrence. It is important to have a plan with a clear Cybersecurity Incident Response \nTeam structure that details everyone’s roles and responsibilities so that there can be clear lines \nof accountability and efficient communication channels. Incident response th..."
+  },
+  {
+    "instruction": "Propose a solution for a gap in CCoP v2.1 Control A.7 (Cybersecurity Incident Management) regarding missing inventory registers.",
+    "input": "Gap: The organization does not maintain a central security asset inventory list.",
+    "output": "Proposed Solution: Deploy an automated CMDB (Configuration Management Database) or centralized inventory spreadsheet. Assign asset owners, log serial numbers, and tag assets with network identifiers to satisfy CCoP Asset Management mandates."
+  },
+  {
+    "instruction": "Analyze the compliance of a cybersecurity plan section against CCoP v2.1 Control A.9: Physical and Environmental Security.",
+    "input": "Control standard requirements: Standard compliance rules for Physical and Environmental Security (A.9). Require structured inventory registers, defined authorization flows, and operational procedures.\nPlan text: 'Our network contains firewalls and access logs. Multi-factor authentication is not yet globally configured.'",
+    "output": "Compliance: Non-Compliant.\nGap: Multi-factor authentication (MFA) is missing. CCoP Control A.9 requires MFA for administrative controls.\nProposed Solution: Enforce global MFA requirements across all administrative entry points."
+  },
+  {
+    "instruction": "What are the compliance requirements for CCoP v2.1 Physical and Environmental Security (A.9)?",
+    "input": "",
+    "output": "The compliance requirements for Physical and Environmental Security under CCoP v2.1 are as follows: Standard compliance rules for Physical and Environmental Security (A.9). Require structured inventory registers, defined authorization flows, and operational procedures...."
+  },
+  {
+    "instruction": "Propose a solution for a gap in CCoP v2.1 Control A.9 (Physical and Environmental Security) regarding missing inventory registers.",
+    "input": "Gap: The organization does not maintain a central security asset inventory list.",
+    "output": "Proposed Solution: Deploy an automated CMDB (Configuration Management Database) or centralized inventory spreadsheet. Assign asset owners, log serial numbers, and tag assets with network identifiers to satisfy CCoP Asset Management mandates."
+  },
+  {
+    "instruction": "Analyze the compliance of a cybersecurity plan section against CCoP v2.1 Control A.10: Business Continuity and Disaster Recovery.",
+    "input": "Control standard requirements: 4 ---\nPage 3 of 64 \n \n5.9 System Hardening...................................................................................................... 32 \n5.10 Patch Management .................................................................................................... 34 \n5.11 Portable Computing \nPlan text: 'Our network contains firewalls and access logs. Multi-factor authentication is not yet globally configured.'",
+    "output": "Compliance: Non-Compliant.\nGap: Multi-factor authentication (MFA) is missing. CCoP Control A.10 requires MFA for administrative controls.\nProposed Solution: Enforce global MFA requirements across all administrative entry points."
+  },
+  {
+    "instruction": "What are the compliance requirements for CCoP v2.1 Business Continuity and Disaster Recovery (A.10)?",
+    "input": "",
+    "output": "The compliance requirements for Business Continuity and Disaster Recovery under CCoP v2.1 are as follows: 4 ---\nPage 3 of 64 \n \n5.9 System Hardening...................................................................................................... 32 \n5.10 Patch Management .................................................................................................... 34 \n5.11 Portable Computing Devices and Removable Storage Media ................................... 35 \n5.12 Application Security .................................................................................................. 36 \n5.13 Database Security ...................................................................................................... 37 \n5.14 Vulnerability Assessment .......................................................................................... 38 \n5.15 Penetration Testing .................."
+  },
+  {
+    "instruction": "Propose a solution for a gap in CCoP v2.1 Control A.10 (Business Continuity and Disaster Recovery) regarding missing inventory registers.",
+    "input": "Gap: The organization does not maintain a central security asset inventory list.",
+    "output": "Proposed Solution: Deploy an automated CMDB (Configuration Management Database) or centralized inventory spreadsheet. Assign asset owners, log serial numbers, and tag assets with network identifiers to satisfy CCoP Asset Management mandates."
+  },
+  {
+    "instruction": "Analyze the compliance of a cybersecurity plan section against CCoP v2.1 Control A.12: Cryptographic Controls.",
+    "input": "Control standard requirements: Standard compliance rules for Cryptographic Controls (A.12). Require structured inventory registers, defined authorization flows, and operational procedures.\nPlan text: 'Our network contains firewalls and access logs. Multi-factor authentication is not yet globally configured.'",
+    "output": "Compliance: Non-Compliant.\nGap: Multi-factor authentication (MFA) is missing. CCoP Control A.12 requires MFA for administrative controls.\nProposed Solution: Enforce global MFA requirements across all administrative entry points."
+  },
+  {
+    "instruction": "What are the compliance requirements for CCoP v2.1 Cryptographic Controls (A.12)?",
+    "input": "",
+    "output": "The compliance requirements for Cryptographic Controls under CCoP v2.1 are as follows: Standard compliance rules for Cryptographic Controls (A.12). Require structured inventory registers, defined authorization flows, and operational procedures...."
+  },
+  {
+    "instruction": "Propose a solution for a gap in CCoP v2.1 Control A.12 (Cryptographic Controls) regarding missing inventory registers.",
+    "input": "Gap: The organization does not maintain a central security asset inventory list.",
+    "output": "Proposed Solution: Deploy an automated CMDB (Configuration Management Database) or centralized inventory spreadsheet. Assign asset owners, log serial numbers, and tag assets with network identifiers to satisfy CCoP Asset Management mandates."
+  }
+]

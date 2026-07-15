@@ -1,0 +1,4 @@
+pypdf
+flask
+flask-cors
+requests

@@ -4,11 +4,13 @@ import {
   FileText, 
   CheckCircle2, 
   AlertTriangle, 
-  ArrowLeft,
   Loader2,
   Lock,
   ShieldCheck,
-  RefreshCw
+  RefreshCw,
+  Info,
+  ExternalLink,
+  BookOpen
 } from 'lucide-react';
 import './Home.css';
 
@@ -19,15 +21,21 @@ export default function Home() {
   const [progress, setProgress] = useState(0);
   const [statusMessage, setStatusMessage] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
+  
+  // Real API audit result state
+  const [auditResult, setAuditResult] = useState(null);
+  const [activeTab, setActiveTab] = useState('gaps'); // gaps | matches
+  
   const fileInputRef = useRef(null);
+  const progressIntervalRef = useRef(null);
 
   // Status message transitions during scanning
   const statusSteps = [
-    { threshold: 0, text: 'Uploading file to secure server...' },
-    { threshold: 25, text: 'Verifying document authenticity...' },
-    { threshold: 50, text: 'Parsing cybersecurity controls...' },
-    { threshold: 75, text: 'Mapping compliance criteria...' },
-    { threshold: 90, text: 'Finalizing assessment plan...' }
+    { threshold: 0, text: 'Uploading file to local CCAS-Agent...' },
+    { threshold: 20, text: 'Extracting text and structure content...' },
+    { threshold: 45, text: 'Mapping standard controls against CCoP v2.1 reference template...' },
+    { threshold: 70, text: 'Executing local Qwen-3-14B LLM compliance audit...' },
+    { threshold: 90, text: 'Parsing results and compiling remediation solutions...' }
   ];
 
   const formatBytes = (bytes, decimals = 1) => {
@@ -93,34 +101,69 @@ export default function Home() {
       type: ext
     });
     
-    startScanningAnimation();
+    uploadAndAudit(selectedFile);
   };
 
-  const startScanningAnimation = () => {
+  const uploadAndAudit = async (selectedFile) => {
     setUploadState('scanning');
     setProgress(0);
-    setStatusMessage('Uploading file to secure server...');
+    setStatusMessage('Uploading file to local CCAS-Agent...');
 
-    const interval = setInterval(() => {
-      setProgress(prev => {
-        const nextProgress = prev + 4;
-        
-        // Update scanning status descriptions
-        const currentStep = [...statusSteps]
-          .reverse()
-          .find(step => nextProgress >= step.threshold);
-        if (currentStep) {
-          setStatusMessage(currentStep.text);
-        }
+    // 1. Start progress visual ticker (goes up to 90% and waits for completion)
+    let currentProgress = 0;
+    progressIntervalRef.current = setInterval(() => {
+      currentProgress += 2;
+      if (currentProgress > 90) {
+        currentProgress = 90; // Wait for LLM backend response
+      }
+      
+      setProgress(currentProgress);
+      
+      // Update text details
+      const step = [...statusSteps]
+        .reverse()
+        .find(s => currentProgress >= s.threshold);
+      if (step) {
+        setStatusMessage(step.text);
+      }
+    }, 200);
 
-        if (nextProgress >= 100) {
-          clearInterval(interval);
-          setUploadState('completed');
-          return 100;
-        }
-        return nextProgress;
+    // 2. Prepare Form Data
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+
+    try {
+      // Send file to Flask server endpoint
+      const response = await fetch('http://localhost:5000/api/analyze', {
+        method: 'POST',
+        body: formData
       });
-    }, 150);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Server returned an error');
+      }
+
+      const results = await response.json();
+      
+      // Clear ticker interval and complete to 100
+      clearInterval(progressIntervalRef.current);
+      
+      // Finish progress to 100%
+      setProgress(100);
+      setStatusMessage('Analysis complete!');
+      setAuditResult(results);
+      
+      setTimeout(() => {
+        setUploadState('completed');
+      }, 500);
+
+    } catch (err) {
+      console.error(err);
+      clearInterval(progressIntervalRef.current);
+      setUploadState('idle');
+      setErrorMsg(err.message || 'Failed to connect to CCAS-Agent backend. Please make sure Flask (port 5000) and LM Studio are active.');
+    }
   };
 
   const resetUploader = () => {
@@ -128,6 +171,7 @@ export default function Home() {
     setUploadState('idle');
     setProgress(0);
     setErrorMsg('');
+    setAuditResult(null);
   };
 
   return (
@@ -136,19 +180,19 @@ export default function Home() {
       <header className="portal-header">
         <div className="portal-logo">
           <Lock size={16} />
-          <span>CCAS PLAN VALIDATOR</span>
+          <span>CCAS COMPLIANCE AUDITOR</span>
         </div>
       </header>
 
       <main className="portal-main">
-        <div className="upload-container glass-card">
+        <div className={`upload-container glass-card ${uploadState === 'completed' ? 'expanded' : ''}`}>
           
           {/* 1. IDLE STATE: DRAG & DROP ZONE */}
           {uploadState === 'idle' && (
             <div className="state-content fade-in">
               <div className="title-section">
-                <h2>Cybersecurity Plan Upload</h2>
-                <p>Upload your system security plan (SSP) or compliance standard to verify security adherence guidelines.</p>
+                <h2>Cybersecurity Plan Uploader</h2>
+                <p>Upload your cybersecurity plan to analyze its compliance against CCoP v2.1 standards using local Qwen AI.</p>
               </div>
 
               <div 
@@ -190,7 +234,7 @@ export default function Home() {
             <div className="state-content centered fade-in">
               <div className="title-section">
                 <h2>Analyzing Document</h2>
-                <p>Please wait while our compliance engine processes the uploaded plan details.</p>
+                <p>Running compliance tests against standard controls on LM Studio...</p>
               </div>
 
               {/* Glowing animated scanner container */}
@@ -223,42 +267,118 @@ export default function Home() {
           )}
 
           {/* 3. COMPLETED STATE: VERIFIED DISPLAY */}
-          {uploadState === 'completed' && (
-            <div className="state-content centered fade-in">
-              <div className="success-icon-wrapper">
-                <CheckCircle2 size={48} className="success-icon" />
+          {uploadState === 'completed' && auditResult && (
+            <div className="state-content fade-in">
+              <div className="success-header">
+                <div className="success-icon-wrapper">
+                  <CheckCircle2 size={36} className="success-icon" />
+                </div>
+                <div className="title-section" style={{ flex: 1 }}>
+                  <h2 className="success-title">Audit Report Generated</h2>
+                  <p>Analyzed: <strong>{file?.name}</strong> ({file?.size})</p>
+                </div>
               </div>
 
-              <div className="title-section">
-                <h2 className="success-title">Plan Document Registered</h2>
-                <p>Your cybersecurity plan was uploaded, scanned, and successfully indexed.</p>
-              </div>
-
-              <div className="verification-card">
-                <div className="verification-row">
-                  <span className="label">Document Name</span>
-                  <span className="value text-ellipsis" title={file?.name}>{file?.name}</span>
-                </div>
-                <div className="verification-row">
-                  <span className="label">Document Size</span>
-                  <span className="value">{file?.size}</span>
-                </div>
-                <div className="verification-row">
-                  <span className="label">Assessment Score</span>
-                  <span className="value compliance-badge">92% ADHERENCE</span>
-                </div>
-                <div className="verification-row">
-                  <span className="label">Status</span>
-                  <span className="value status-badge">
-                    <ShieldCheck size={14} /> SECURED
+              {/* Compliance score header card */}
+              <div className="score-summary-card">
+                <div className="radial-score-box">
+                  <span className="score-val" style={{
+                    color: auditResult.compliance_percentage >= 85 ? 'var(--success)' : auditResult.compliance_percentage >= 60 ? 'var(--primary)' : 'var(--danger)'
+                  }}>
+                    {auditResult.compliance_percentage}%
                   </span>
+                  <span className="score-lbl">Adherence</span>
                 </div>
+                <div className="score-details">
+                  <h4>Assessment Verdict</h4>
+                  <p>
+                    {auditResult.compliance_percentage >= 85 
+                      ? 'The plan aligns with target CCoP mandates. Review the minor gaps identified below.' 
+                      : auditResult.compliance_percentage >= 60 
+                      ? 'Action required. The plan contains critical gaps that must be addressed.' 
+                      : 'Non-Compliant. Critical security controls are absent or not defined.'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Tabs for details list */}
+              <div className="tabs-container">
+                <button 
+                  className={`tab-btn ${activeTab === 'gaps' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('gaps')}
+                >
+                  Identified Gaps ({auditResult.gaps ? auditResult.gaps.length : 0})
+                </button>
+                <button 
+                  className={`tab-btn ${activeTab === 'matches' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('matches')}
+                >
+                  Compliant Controls ({auditResult.matches ? auditResult.matches.length : 0})
+                </button>
+              </div>
+
+              {/* Tab results list */}
+              <div className="list-wrapper">
+                {activeTab === 'gaps' && (
+                  (!auditResult.gaps || auditResult.gaps.length === 0) ? (
+                    <div className="empty-tab-state">
+                      <ShieldCheck size={28} className="success-icon" />
+                      <p>No gaps identified! Your plan fully complies with CCoP requirements.</p>
+                    </div>
+                  ) : (
+                    <div className="items-list">
+                      {auditResult.gaps.map((gap, index) => (
+                        <div key={index} className="list-card gap-card">
+                          <div className="card-header">
+                            <div className="card-badge" style={{
+                              color: gap.level === 'high' ? 'var(--danger)' : 'var(--primary)',
+                              background: gap.level === 'high' ? 'var(--danger-glow)' : 'var(--primary-glow)'
+                            }}>
+                              {gap.id || 'GAP'} • {gap.level || 'medium'} severity
+                            </div>
+                            <h5>{gap.title}</h5>
+                          </div>
+                          <p className="card-desc">{gap.description}</p>
+                          {gap.proposed_solution && (
+                            <div className="remediation-box">
+                              <strong>Proposed Solution:</strong>
+                              <p>{gap.proposed_solution}</p>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )
+                )}
+
+                {activeTab === 'matches' && (
+                  (!auditResult.matches || auditResult.matches.length === 0) ? (
+                    <div className="empty-tab-state">
+                      <AlertTriangle size={28} style={{ color: 'var(--text-muted)' }} />
+                      <p>No compliant controls mapped in the analysis.</p>
+                    </div>
+                  ) : (
+                    <div className="items-list">
+                      {auditResult.matches.map((match, index) => (
+                        <div key={index} className="list-card match-card">
+                          <div className="card-header">
+                            <div className="card-badge success">
+                              {match.id || 'OK'} • Compliant
+                            </div>
+                            <h5>{match.title}</h5>
+                          </div>
+                          <p className="card-desc">{match.description}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )
+                )}
               </div>
 
               <div className="button-group">
                 <button className="btn-reset" onClick={resetUploader}>
-                  <RefreshCw size={16} />
-                  <span>Upload Another Document</span>
+                  <RefreshCw size={14} />
+                  <span>Analyze Another Plan</span>
                 </button>
               </div>
             </div>

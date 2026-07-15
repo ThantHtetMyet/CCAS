@@ -1,0 +1,108 @@
+[
+  {
+    "id": "A.1",
+    "title": "Cybersecurity Governance and Leadership",
+    "keywords": [
+      "governance",
+      "roles",
+      "steering",
+      "leadership",
+      "committee",
+      "officer",
+      "responsibilities"
+    ],
+    "requirements": "3 ---\nPage 2 of 64 \n \nCYBERSECURITY ACT 2018 \nCYBERSECURITY CODE OF PRACTICE  \nFOR CRITICAL INFORMATION INFRASTRUCTURE  \nSECOND EDITION REVISION ONE \n1 PRELIMINARY .............................................................................................................. 5 \n1.1 Citation and Commencement ...................................................................................... 5 \n1.2 Glossary and Interpretation ......................................................................................... 5 \n1.3 Purpose of this Code .................................................................................................. 12 \n1.4 Legal Effect of this Code ........................................................................................... 12 \n1.5 Recurring Requirements ............................................................................................ 12 \n1.6 Waiver ....................................................................................................................... 13 \n1.7 Amendment and Revocation ..................................................................................... 14 \n2 AUDIT REQUIREMENTS ........................................................................................... 15 \n2.1 Remediation of Audit Findings ................................................................................. 15 \n3 GOVERNANCE REQUIREMENTS ........................................................................... 16 \n3.1 Leadership and Oversight .......................................................................................... 16 \n3.2 Risk Management ...................................................................................................... 17 \n3.3 Policies, Standards, Guidelines and Procedures ........................................................ 19 \n3.4 Security-by-Design .................................................................................................... 20 \n3.5 Cybersecurity Design Principles ............................................................................... 20 \n3.6 Change Management ................................................................................................. 21 \n3.7 Use of Cloud Computing Systems and Services ....................................................... 21 \n3.8 Outsourcing and Vendor Management ...................................................................... 22 \n4 IDENTIFICATION REQUIREMENTS ..................................................................... 24 \n4.1 Asset Management .................................................................................................... 24 \n5 PROTECTION REQUIREMENTS ............................................................................. 26 \n5.1 Access Control ........................................................................................................... 26 \n5.2 Account Management ......................................................"
+  },
+  {
+    "id": "A.2",
+    "title": "Asset Management",
+    "keywords": [
+      "asset",
+      "inventory",
+      "registry",
+      "ownership",
+      "classification",
+      "handling"
+    ],
+    "requirements": "25 ---\nPage 24 of 64 \n \n4 IDENTIFICATION REQUIREMENTS \nIdentification requirements aim to assist the CIIO in understanding and identifying the \nresources and assets supporting the CIIO’s critical business functions in delivering essential \nservices, and the associated cybersecurity risks. It enables the CIIO to focus and prioritise its \nefforts in protecting these assets. \n4.1 Asset Management  \nAsset management includes creating and maintaining  a comprehensive inventory of all CII \nassets, including hardware, software, assets’ dependencies, and connections with any systems \nor networks. This is a key component in  ensuring cybersecurity as it provides visibility of CII \nassets and allows operators to make informed decisions and prioritise assets for protection. In \naddition, change s to CII asset  or information recorded needs to be updated in the asset \ninventory in a timely manner to ensure that inventory is up-to-date. \n \n4.1.1 The CIIO shall establish mechanisms and processes  to identify  all CII assets and \nmaintain an inventory of the assets. The inventory shall include the following:  \n \n(a) Owner and/or operator of each CII asset; \n \n(b) Name and description of each CII asset; \n \n(c) Description of critical functions of each CII asset; \n \n(d) Key person(s) responsible for the cybersecurity of each CII asset; \n \n(e) The dependencies of each CII asset and the connections between each CII asset \nand any systems or networks (whether internal or external to the CII); \n \n(f) Physical location of each CII asset; \n \n(g) Outsourced service providers used to support each CII asset;  \n \n(h) Cloud services used to support each CII asset. \n \n(i) Description of the internet links supporting the CII, including information on \nthe distributed denial-of-service (DDoS) attack mitigation measures in place for \nthese internet links; and \n \n(j) CII network topology diagram, including the CII network perimeter, and all \nexternal computers and computer systems that the CII interfaces with.\n26 ---\nPage 25 of 64 \n \n4.1.2 The CIIO shall update the inventory whenever there is any change to any CII asset or \nto the information to be recorded in the inventory."
+  },
+  {
+    "id": "A.4",
+    "title": "Access Control",
+    "keywords": [
+      "access control",
+      "authentication",
+      "multi-factor",
+      "mfa",
+      "privilege",
+      "authorization",
+      "password"
+    ],
+    "requirements": "27 ---\nPage 26 of 64 \n \n5 PROTECTION REQUIREMENTS \nProtection requirements help the CIIO understand and implement the required people, process, \nand technology controls to protect the CII and to limit and contain the impact of cybersecurity \nincidents. \n5.1 Access Control  \nAccess control involves safeguarding CII assets from unauthorised access. By deploying access \nmanagement mechanisms and processes, the CIIO ensure that only authorised parties can  \naccess protected systems, information and applications . Access control includes the steps of \nIdentification, Authentication and Authorisation. \n \n5.1.1 The CIIO shall ensure that access to the CII and between parts of the CII is restricted \nto authorised personnel, activities, processes and devices.  \n \n5.1.2 With respect to the CIIO’s obligations under clause 5.1.1, the CIIO shall put in place \nauthorisation and authentication controls for any access to the CII and between parts of the CII \ncommensurate with the cybersecurity risk profile of the CII.  \n \n5.1.3 The CIIO shall ensure that all vendors’ access to the CII are:  \n \n(a) Documented and pre-approved;  \n \n(b) Supervised by the CIIO; and \n \n(c) Performed on-site. \n \n5.1.4 The CIIO shall implement mechanisms to automatically terminate logon sessions after \ninactivity for a pre -defined time; if the logon sessions cannot be terminated, the CIIO shall \nmonitor the logon sessions for anomalous activities and trigger an alert for investigation when \nany anomaly is detected.\n29 ---\nPage 28 of 64 \n \n5.3 Privileged Access Management  \nPrivileged accounts on a network are prime targets for malicious exploitation because they \nusually have more authority and access to resources. An attacker who has access to these \naccounts could potentially move about in the network and access privileged resources to gain \nunauthorised and persistent access to the entire system.  Therefore, privileged access must be \nsubject to tighter access control and greater monitoring. \n \n5.3.1 With respect to privileged accounts, the CIIO shall: \n \n(a) Ensure that privileged access (i.e., administrative access) is granted only to \nselected accounts authorised to have such access;  \n \n(b) Maintain an updated inventory of privileged accounts including details of the \npermissions and privileges assigned to each account; \n \n(c) Implement multi-factor authentication where privileged accounts are used to \naccess the CII, and where privileges are to be escalated to the level of privileged \naccess (e.g., where the user seeks to obtain additional permissions on a system \nor network after an initial log-in); and \n \n(d) Ensure that privileged access is  initiated from a cybersecurity hardened \nenvironment and transfer of data takes place over authorised connections.  \n5.4 Domain Controller \nDomain controllers are servers that are responsible for authenticating user access to a \nnetwork. During a cybersecurity incident, the domain controller is one of the primary targets \nas it contains"
+  },
+  {
+    "id": "A.5",
+    "title": "Communications and Operations Security",
+    "keywords": [
+      "network security",
+      "firewall",
+      "encryption",
+      "transmission",
+      "logging",
+      "monitoring"
+    ],
+    "requirements": "4 ---\nPage 3 of 64 \n \n5.9 System Hardening...................................................................................................... 32 \n5.10 Patch Management .................................................................................................... 34 \n5.11 Portable Computing Devices and Removable Storage Media ................................... 35 \n5.12 Application Security .................................................................................................. 36 \n5.13 Database Security ...................................................................................................... 37 \n5.14 Vulnerability Assessment .......................................................................................... 38 \n5.15 Penetration Testing .................................................................................................... 39 \n5.16 Adversarial Attack Simulation .................................................................................. 40 \n5.17 Cryptographic Key Management ............................................................................... 41 \n6 DETECTION REQUIREMENTS ................................................................................ 42 \n6.1 Logging ...................................................................................................................... 42 \n6.2 Monitoring and Detection .......................................................................................... 43 \n6.3 Threat Hunting ........................................................................................................... 45 \n6.4 Cyber Threat Intelligence and Information Sharing .................................................. 45 \n7 RESPONSE AND RECOVERY REQUIREMENTS ................................................. 47 \n7.1 Incident Management ................................................................................................ 47 \n7.2 Crisis Communication Plan ....................................................................................... 49 \n7.3 Cybersecurity Exercise .............................................................................................. 50 \n8 CYBER RESILIENCY REQUIREMENTS ................................................................ 52 \n8.1 Backup and Restoration Plan ..................................................................................... 52 \n8.2 Business Continuity Plan and Disaster Recovery Plan ............................................. 53 \n9 CYBERSECURITY TRAINING & AWARENESS ................................................... 54 \n9.1 Cybersecurity Awareness Programme....................................................................... 54 \n9.2 Cybersecurity Training and Skills ............................................................................. 55 \n10 OPERATIONAL TECHNOLOGY (OT) SECURITY REQUIREMENTS ............. 56 \n10.1 Application of this Section ......................................"
+  },
+  {
+    "id": "A.7",
+    "title": "Cybersecurity Incident Management",
+    "keywords": [
+      "incident response",
+      "reporting",
+      "escalation",
+      "breach",
+      "mitigation",
+      "coordination"
+    ],
+    "requirements": "48 ---\nPage 47 of 64 \n \n7 RESPONSE AND RECOVERY REQUIREMENTS  \nEstablishing, managing, and exercising cybersecurity incident response plan s and crisis \ncommunication plans to prepare the CII for cybersecurity incidents.  \n7.1 Incident Management  \nIncident management seeks to minimise the impact of cybersecurity incidents through \nprocesses that include the identification, containment and eradication of cybersecurity threats, \nand the recovery of systems, root -cause analysis and implementation of corrective actions to \nprevent recurrence. It is important to have a plan with a clear Cybersecurity Incident Response \nTeam structure that details everyone’s roles and responsibilities so that there can be clear lines \nof accountability and efficient communication channels. Incident response thresholds that are \nrelevant to the business should also be determined so that the incident response plan can be \ntriggered accurately without delays. Communication plans would also allow relevant parties \nto be updated with accurate situational updates. \n \nWhen conducting root cause analysis, organisations should also include structural, \nbehavioural, managerial, technical or systemic  factors that could contribute to the \ncybersecurity incident to address potential underlying issues and prevent a recurrence of \nsimilar incidents. \n \n7.1.1 The CIIO shall establish a Cybersecurity Incident Response Plan that sets out how a \nCIIO should respond to a cybersecurity incident. The CIIO shall ensure that the Plan \nestablishes:  \n \n(a) A Cybersecurity Incident Response Team (“CIRT”) structure, including clearly \ndefined roles and responsibilities of each team member and their contact details; \n \n(b) An incident reporting structure which sets out how the CIIO will comply with \nits reporting obligations under the Act and any other laws and regulations that \napply to the CII; \n \n(c) Communication and coordination structures to ensure the timely escalation of \ncybersecurity incidents to the CIRT and to the senior management of the CIIO;  \n \n(d) Thresholds and procedures to activate the incident response and CIRT; \n \n(e) Engagement protocols with relevant external parties , including  vendors for \nforensic or recovery services and law enforcement agencies, and their contact \ndetails; \n \n(f) A communication plan to communicate information relating to a cybersecurity \nincident to internal and external stakeholders;\n51 ---\nPage 50 of 64 \n \n7.3 Cybersecurity Exercise  \nConducting cybersecurity exercises allow organisations to assess and validate their planning \nand operational capabilities, and to surface any areas of improvement. The continuous cycle \nof assessment, validation and improvement through a regular cyber exercise regime that covers \npeople, process a nd technology,  improves the operational readiness of the organisation, \nenabling swifter and more effective response to cybersecurity incidents. \n \n7.3.1 The CIIO shall conduct scenario-based cybersecurity exercises to"
+  },
+  {
+    "id": "A.9",
+    "title": "Physical and Environmental Security",
+    "keywords": [
+      "physical access",
+      "visitor",
+      "perimeter",
+      "surveillance",
+      "barrier",
+      "entry control"
+    ],
+    "requirements": "Standard compliance rules for Physical and Environmental Security (A.9). Require structured inventory registers, defined authorization flows, and operational procedures."
+  },
+  {
+    "id": "A.10",
+    "title": "Business Continuity and Disaster Recovery",
+    "keywords": [
+      "business continuity",
+      "disaster recovery",
+      "backup",
+      "redundancy",
+      "dr test",
+      "bcp"
+    ],
+    "requirements": "4 ---\nPage 3 of 64 \n \n5.9 System Hardening...................................................................................................... 32 \n5.10 Patch Management .................................................................................................... 34 \n5.11 Portable Computing Devices and Removable Storage Media ................................... 35 \n5.12 Application Security .................................................................................................. 36 \n5.13 Database Security ...................................................................................................... 37 \n5.14 Vulnerability Assessment .......................................................................................... 38 \n5.15 Penetration Testing .................................................................................................... 39 \n5.16 Adversarial Attack Simulation .................................................................................. 40 \n5.17 Cryptographic Key Management ............................................................................... 41 \n6 DETECTION REQUIREMENTS ................................................................................ 42 \n6.1 Logging ...................................................................................................................... 42 \n6.2 Monitoring and Detection .......................................................................................... 43 \n6.3 Threat Hunting ........................................................................................................... 45 \n6.4 Cyber Threat Intelligence and Information Sharing .................................................. 45 \n7 RESPONSE AND RECOVERY REQUIREMENTS ................................................. 47 \n7.1 Incident Management ................................................................................................ 47 \n7.2 Crisis Communication Plan ....................................................................................... 49 \n7.3 Cybersecurity Exercise .............................................................................................. 50 \n8 CYBER RESILIENCY REQUIREMENTS ................................................................ 52 \n8.1 Backup and Restoration Plan ..................................................................................... 52 \n8.2 Business Continuity Plan and Disaster Recovery Plan ............................................. 53 \n9 CYBERSECURITY TRAINING & AWARENESS ................................................... 54 \n9.1 Cybersecurity Awareness Programme....................................................................... 54 \n9.2 Cybersecurity Training and Skills ............................................................................. 55 \n10 OPERATIONAL TECHNOLOGY (OT) SECURITY REQUIREMENTS ............. 56 \n10.1 Application of this Section ......................................"
+  },
+  {
+    "id": "A.12",
+    "title": "Cryptographic Controls",
+    "keywords": [
+      "cryptography",
+      "encryption",
+      "key management",
+      "ssl",
+      "tls",
+      "hashing"
+    ],
+    "requirements": "Standard compliance rules for Cryptographic Controls (A.12). Require structured inventory registers, defined authorization flows, and operational procedures."
+  }
+]
