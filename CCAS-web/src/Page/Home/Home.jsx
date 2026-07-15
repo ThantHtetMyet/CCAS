@@ -691,59 +691,85 @@ currentPage * sectionsPerPage
                       </div>
                     </div>
                   </div>
-                </div>
+                 </div>
 
-                {/* ── Percentage Gauge ── */}
-                <div style={{
-                  background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
-                  borderRadius: '12px',
-                  padding: '1.25rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '1.25rem',
-                  border: '1px solid #334155'
-                }}>
-                  {/* Circular score */}
-                  <div style={{
-                    position: 'relative',
-                    width: '80px', height: '80px', flexShrink: 0
-                  }}>
-                    <svg width="80" height="80" style={{ transform: 'rotate(-90deg)' }}>
-                      <circle cx="40" cy="40" r="34" fill="none" stroke="#334155" strokeWidth="7"/>
-                      <circle cx="40" cy="40" r="34" fill="none" stroke={pctColor} strokeWidth="7"
-                        strokeDasharray={`${2 * Math.PI * 34}`}
-                        strokeDashoffset={`${2 * Math.PI * 34 * (1 - pct / 100)}`}
-                        strokeLinecap="round"
-                        style={{ transition: 'stroke-dashoffset 1s ease' }}
-                      />
-                    </svg>
-                    <div style={{
-                      position: 'absolute', inset: 0, display: 'flex',
-                      flexDirection: 'column', alignItems: 'center', justifyContent: 'center'
-                    }}>
-                      <span style={{ fontSize: '1.1rem', fontWeight: 800, color: pctColor, lineHeight: 1 }}>{pct}%</span>
-                      <span style={{ fontSize: '0.55rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Score</span>
-                    </div>
-                  </div>
-
-                  {/* Stats */}
-                  <div style={{ flex: 1 }}>
-                    <div style={{ color: '#f8fafc', fontWeight: 700, fontSize: '0.95rem', marginBottom: '0.4rem' }}>
-                      Overall Compliance Score
-                    </div>
-                    <div style={{ fontSize: '0.75rem', color: pctColor, marginBottom: '0.6rem' }}>
-                      {pct >= 85 ? '✓ Plan aligns with CCoP v2.1 mandates.'
-                        : pct >= 60 ? '⚠ Action required — critical gaps identified.'
-                        : '✗ Non-compliant — major controls missing.'}
-                    </div>
-                    <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.72rem', fontWeight: 600 }}>
-                      <span style={{ color: '#10b981' }}>✓ {compliantSubs} Compliant</span>
-                      <span style={{ color: '#f59e0b' }}>◑ {partialSubs} Partial</span>
-                      <span style={{ color: '#ef4444' }}>✗ {nonSubs} Non-Compliant</span>
-                      <span style={{ color: '#64748b' }}>/ {totalSubs} total controls</span>
-                    </div>
-                  </div>
-                </div>
+                 {/* ── Percentage Gauge ── */}
+                 <div style={{
+                   background: '#ffffff',
+                   borderRadius: '12px',
+                   padding: '1.5rem',
+                   display: 'flex',
+                   alignItems: 'center',
+                   gap: '1.5rem',
+                   border: '1.5px solid #e2e8f0',
+                   boxShadow: '0 1px 3px rgba(0,0,0,0.02)',
+                   marginTop: '1.25rem'
+                 }}>
+                   {/* Circular score */}
+                   <div style={{
+                     position: 'relative',
+                     width: '80px', height: '80px', flexShrink: 0
+                   }}>
+                     <svg width="80" height="80" style={{ transform: 'rotate(-90deg)' }}>
+                       <circle cx="40" cy="40" r="34" fill="none" stroke="#e2e8f0" strokeWidth="7"/>
+                       <circle cx="40" cy="40" r="34" fill="none" stroke={pctColor} strokeWidth="7"
+                         strokeDasharray={`${2 * Math.PI * 34}`}
+                         strokeDashoffset={`${2 * Math.PI * 34 * (1 - pct / 100)}`}
+                         strokeLinecap="round"
+                         style={{ transition: 'stroke-dashoffset 1s ease' }}
+                       />
+                     </svg>
+                     <div style={{
+                       position: 'absolute', inset: 0, display: 'flex',
+                       flexDirection: 'column', alignItems: 'center', justifyContent: 'center'
+                     }}>
+                       <span style={{ fontSize: '1.1rem', fontWeight: 800, color: pctColor, lineHeight: 1 }}>{pct}%</span>
+                       <span style={{ fontSize: '0.52rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.5px' }}>Score</span>
+                     </div>
+                   </div>
+ 
+                   {/* Stats */}
+                   <div style={{ flex: 1 }}>
+                     <div style={{ color: '#0f172a', fontWeight: 800, fontSize: '1.05rem', marginBottom: '0.25rem' }}>
+                       Overall Compliance Score
+                     </div>
+                     <div style={{ fontSize: '0.78rem', color: pctColor, fontWeight: 600, marginBottom: '0.65rem' }}>
+                       {pct >= 85 ? 'Plan aligns with CCoP v2.1 mandates.'
+                         : pct >= 60 ? 'Action required — critical compliance gaps identified.'
+                         : 'Non-compliant — major required controls missing.'}
+                     </div>
+                     <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                       <span style={{
+                         fontSize: '0.72rem', fontWeight: 700, padding: '3px 8px',
+                         borderRadius: '4px', background: '#d1fae5', color: '#065f46',
+                         border: '1px solid #a7f3d0', whiteSpace: 'nowrap'
+                       }}>
+                         compliance: {compliantSubs}
+                       </span>
+                       <span style={{
+                         fontSize: '0.72rem', fontWeight: 700, padding: '3px 8px',
+                         borderRadius: '4px', background: '#fef3c7', color: '#92400e',
+                         border: '1px solid #fde68a', whiteSpace: 'nowrap'
+                       }}>
+                         partial compliance: {partialSubs}
+                       </span>
+                       <span style={{
+                         fontSize: '0.72rem', fontWeight: 700, padding: '3px 8px',
+                         borderRadius: '4px', background: '#fee2e2', color: '#991b1b',
+                         border: '1px solid #fca5a5', whiteSpace: 'nowrap'
+                       }}>
+                         noncompliance: {nonSubs}
+                       </span>
+                       <span style={{
+                         fontSize: '0.72rem', fontWeight: 700, padding: '3px 8px',
+                         borderRadius: '4px', background: '#f1f5f9', color: '#475569',
+                         border: '1px solid #e2e8f0', whiteSpace: 'nowrap'
+                       }}>
+                         total: {totalSubs}
+                       </span>
+                     </div>
+                   </div>
+                 </div>
 
                 {/* ── Section title row with download & rescan icons ── */}
                 <div style={{
