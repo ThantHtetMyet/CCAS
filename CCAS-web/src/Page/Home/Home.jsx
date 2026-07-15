@@ -555,9 +555,10 @@ export default function Home() {
                     border: '1.5px solid #e2e8f0',
                     borderRadius: '8px',
                     padding: '1.5rem',
-                    height: '100%',
+                    height: '390px',
                     boxSizing: 'border-box'
                   }}>
+
                     {/* Radar — light theme */}
                     <div className="radar-container">
                       <div className="radar-ring radar-ring-1" />
@@ -588,12 +589,22 @@ export default function Home() {
                       borderRadius: '8px', padding: '0.6rem 0.9rem', width: '100%'
                     }}>
                       <div className="pulse-spinner" />
-                      <span style={{ color: '#475569', fontSize: '0.78rem', fontFamily: 'monospace', fontWeight: 600 }}>
+                      <span style={{
+                        color: '#475569',
+                        fontSize: '0.78rem',
+                        fontFamily: 'monospace',
+                        fontWeight: 600,
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        flex: 1
+                      }}>
                         {statusMessage || 'Initializing AI audit engine...'}
                       </span>
-                      <span style={{ marginLeft: 'auto', color: '#ea580c', fontSize: '0.78rem', fontWeight: 700, fontFamily: 'monospace' }}>
+                      <span style={{ marginLeft: '0.5rem', color: '#ea580c', fontSize: '0.78rem', fontWeight: 700, fontFamily: 'monospace', flexShrink: 0 }}>
                         {progress}%
                       </span>
+
                     </div>
 
                     {/* Segmented progress bar */}
@@ -637,9 +648,10 @@ export default function Home() {
                     display: 'flex',
                     flexDirection: 'column',
                     gap: '0.75rem',
-                    height: '100%',
+                    height: '390px',
                     boxSizing: 'border-box'
                   }}>
+
                     <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                       Audit Process Logs
                     </div>
