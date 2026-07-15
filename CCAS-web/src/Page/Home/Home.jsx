@@ -550,14 +550,15 @@ export default function Home() {
                     flexDirection: 'column',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    gap: '1.25rem',
+                    gap: '1rem',
                     background: '#ffffff',
                     border: '1.5px solid #e2e8f0',
                     borderRadius: '8px',
-                    padding: '1.5rem',
-                    height: '390px',
+                    padding: '1.25rem',
+                    height: '350px',
                     boxSizing: 'border-box'
                   }}>
+
 
                     {/* Radar — light theme */}
                     <div className="radar-container">
@@ -647,16 +648,15 @@ export default function Home() {
                   <div style={{
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: '0.75rem',
-                    height: '390px',
+                    gap: '0.5rem',
+                    height: '350px',
                     boxSizing: 'border-box'
                   }}>
-
                     <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                       Audit Process Logs
                     </div>
                     {/* Log panel — white, matching height of left container */}
-                    <div className="scan-log-panel" style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: 0 }}>
+                    <div className="scan-log-panel" style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: 0, overflow: 'hidden', border: '1.5px solid #cbd5e1' }}>
                       <div className="scan-log-line" style={{ flex: 1, padding: '0.8rem 1rem', borderBottom: '1px solid #f1f5f9', margin: 0, animationDelay: '0s' }}>
                         <span className="log-tag ok">PASS</span>
                         <span>Section 3.1 — Leadership and Oversight · matched</span>
