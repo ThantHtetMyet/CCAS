@@ -1,0 +1,7 @@
+# CCAS root gitignore
+CCAS-web/node_modules/
+CCAS-web/dist/
+.agents/
+*.log
+.DS_Store
+Thumbs.db
