@@ -847,47 +847,56 @@ currentPage * sectionsPerPage
                             </span>
 
                             {/* Subsection breakdown counts */}
-                            <div style={{ display: 'flex', gap: '0.3rem', marginRight: '0.5rem', alignItems: 'center' }}>
+                            <div style={{ display: 'flex', gap: '0.4rem', marginRight: '0.75rem', alignItems: 'center' }}>
                               {compliantCount > 0 && (
                                 <span style={{
-                                  fontSize: '0.65rem', fontWeight: 700, padding: '1px 5px',
-                                  borderRadius: '4px', background: '#d1fae5', color: '#065f46',
-                                  border: '1px solid #a7f3d0'
-                                }} title={`${compliantCount} Compliant Subsections`}>
-                                  {compliantCount} ✓
+                                  fontSize: '0.68rem',
+                                  fontWeight: 700,
+                                  padding: '2px 7px',
+                                  borderRadius: '4px',
+                                  background: '#d1fae5',
+                                  color: '#065f46',
+                                  border: '1px solid #a7f3d0',
+                                  whiteSpace: 'nowrap'
+                                }}>
+                                  compliance: {compliantCount}/{subs.length}
                                 </span>
                               )}
                               {partialCount > 0 && (
                                 <span style={{
-                                  fontSize: '0.65rem', fontWeight: 700, padding: '1px 5px',
-                                  borderRadius: '4px', background: '#fef3c7', color: '#92400e',
-                                  border: '1px solid #fde68a'
-                                }} title={`${partialCount} Partially Compliant Subsections`}>
-                                  {partialCount} ◑
+                                  fontSize: '0.68rem',
+                                  fontWeight: 700,
+                                  padding: '2px 7px',
+                                  borderRadius: '4px',
+                                  background: '#fef3c7',
+                                  color: '#92400e',
+                                  border: '1px solid #fde68a',
+                                  whiteSpace: 'nowrap'
+                                }}>
+                                  partial: {partialCount}/{subs.length}
                                 </span>
                               )}
                               {nonCompliantCount > 0 && (
                                 <span style={{
-                                  fontSize: '0.65rem', fontWeight: 700, padding: '1px 5px',
-                                  borderRadius: '4px', background: '#fee2e2', color: '#991b1b',
-                                  border: '1px solid #fca5a5'
-                                }} title={`${nonCompliantCount} Non-Compliant Subsections`}>
-                                  {nonCompliantCount} ✗
+                                  fontSize: '0.68rem',
+                                  fontWeight: 700,
+                                  padding: '2px 7px',
+                                  borderRadius: '4px',
+                                  background: '#fee2e2',
+                                  color: '#991b1b',
+                                  border: '1px solid #fca5a5',
+                                  whiteSpace: 'nowrap'
+                                }}>
+                                  noncompliance: {nonCompliantCount}/{subs.length}
                                 </span>
                               )}
                             </div>
 
-                            <span style={{
-                              fontSize: '0.62rem', fontWeight: 700, padding: '2px 7px',
-                              borderRadius: '4px', background: cfg.dot + '22', color: cfg.text,
-                              border: `1px solid ${cfg.dot}55`, whiteSpace: 'nowrap', marginRight: '0.5rem'
-                            }}>
-                              {cfg.label}
-                            </span>
                             <span style={{ color: cfg.text, flexShrink: 0 }}>
                               {isOpen ? <ChevronUp size={16}/> : <ChevronDown size={16}/>}
                             </span>
                           </button>
+
 
                           {/* Expanded subsections */}
                           {isOpen && (
