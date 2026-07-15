@@ -752,6 +752,12 @@ export default function Home() {
                       const cfg = statusConfig(secStatus);
                       const isOpen = !!expandedSections[section.section_num];
 
+                      // Calculate breakdown counts
+                      const subs = section.subsections || [];
+                      const compliantCount = subs.filter(s => normalizeStatus(s) === 'compliant').length;
+                      const partialCount = subs.filter(s => normalizeStatus(s) === 'partial').length;
+                      const nonCompliantCount = subs.filter(s => normalizeStatus(s) === 'non-compliant').length;
+
                       return (
                         <div key={section.section_num} style={{ borderRadius: '8px', overflow: 'hidden', border: `1.5px solid ${cfg.border}` }}>
 
@@ -770,13 +776,46 @@ export default function Home() {
                               width: '10px', height: '10px', borderRadius: '50%',
                               background: cfg.dot, flexShrink: 0, boxShadow: `0 0 6px ${cfg.dot}88`
                             }} />
+                            
                             <span style={{ flex: 1, fontWeight: 700, fontSize: '0.85rem', color: '#0f172a' }}>
                               Section {section.section_num}: {section.section_title}
                             </span>
+
+                            {/* Subsection breakdown counts */}
+                            <div style={{ display: 'flex', gap: '0.3rem', marginRight: '0.5rem', alignItems: 'center' }}>
+                              {compliantCount > 0 && (
+                                <span style={{
+                                  fontSize: '0.65rem', fontWeight: 700, padding: '1px 5px',
+                                  borderRadius: '4px', background: '#d1fae5', color: '#065f46',
+                                  border: '1px solid #a7f3d0'
+                                }} title={`${compliantCount} Compliant Subsections`}>
+                                  {compliantCount} ✓
+                                </span>
+                              )}
+                              {partialCount > 0 && (
+                                <span style={{
+                                  fontSize: '0.65rem', fontWeight: 700, padding: '1px 5px',
+                                  borderRadius: '4px', background: '#fef3c7', color: '#92400e',
+                                  border: '1px solid #fde68a'
+                                }} title={`${partialCount} Partially Compliant Subsections`}>
+                                  {partialCount} ◑
+                                </span>
+                              )}
+                              {nonCompliantCount > 0 && (
+                                <span style={{
+                                  fontSize: '0.65rem', fontWeight: 700, padding: '1px 5px',
+                                  borderRadius: '4px', background: '#fee2e2', color: '#991b1b',
+                                  border: '1px solid #fca5a5'
+                                }} title={`${nonCompliantCount} Non-Compliant Subsections`}>
+                                  {nonCompliantCount} ✗
+                                </span>
+                              )}
+                            </div>
+
                             <span style={{
                               fontSize: '0.62rem', fontWeight: 700, padding: '2px 7px',
                               borderRadius: '4px', background: cfg.dot + '22', color: cfg.text,
-                              border: `1px solid ${cfg.dot}55`, whiteSpace: 'nowrap'
+                              border: `1px solid ${cfg.dot}55`, whiteSpace: 'nowrap', marginRight: '0.5rem'
                             }}>
                               {cfg.label}
                             </span>
@@ -788,34 +827,72 @@ export default function Home() {
                           {/* Expanded subsections */}
                           {isOpen && (
                             <div style={{ background: '#fafafa', borderTop: `1px solid ${cfg.border}44`, padding: '0.5rem 0.75rem', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-                              {(section.subsections || []).map((sub) => {
+                              {subs.map((sub) => {
                                 const subStatus = normalizeStatus(sub);
                                 const subCfg = statusConfig(subStatus);
                                 return (
                                   <div key={sub.id} style={{
                                     background: '#ffffff', border: `1px solid ${subCfg.border}44`,
                                     borderLeft: `3px solid ${subCfg.dot}`, borderRadius: '6px',
-                                    padding: '0.7rem 0.85rem'
+                                    padding: '0.75rem 0.95rem'
                                   }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.35rem' }}>
+                                    
+                                    {/* Subtitle Header Row with left sub-title and right status badge */}
+                                    <div style={{
+                                      display: 'flex',
+                                      justifyContent: 'space-between',
+                                      alignItems: 'center',
+                                      gap: '1rem',
+                                      marginBottom: '0.5rem'
+                                    }}>
+                                      <div style={{ fontWeight: 700, fontSize: '0.85rem', color: '#0f172a' }}>
+                                        {sub.id} {sub.title}
+                                      </div>
                                       <span style={{
-                                        fontSize: '0.6rem', fontWeight: 700, padding: '2px 6px',
-                                        borderRadius: '3px', background: subCfg.bg, color: subCfg.text,
-                                        border: `1px solid ${subCfg.border}44`
-                                      }}>{sub.id} • {subCfg.label}</span>
+                                        fontSize: '0.62rem', fontWeight: 800, padding: '3px 8px',
+                                        borderRadius: '4px', background: subCfg.bg, color: subCfg.text,
+                                        border: `1px solid ${subCfg.border}44`,
+                                        whiteSpace: 'nowrap',
+                                        textTransform: 'uppercase',
+                                        letterSpacing: '0.5px'
+                                      }}>
+                                        {subCfg.label}
+                                      </span>
                                     </div>
-                                    <div style={{ fontWeight: 700, fontSize: '0.82rem', color: '#0f172a', marginBottom: '0.25rem' }}>{sub.title}</div>
+
                                     <p style={{ fontSize: '0.78rem', color: '#475569', lineHeight: 1.45, margin: 0 }}>{sub.description}</p>
+                                    
+                                    {/* Structured child container proposed solutions */}
                                     {(subStatus === 'partial' || subStatus === 'non-compliant') && sub.proposed_solution && (
                                       <div style={{
-                                        marginTop: '0.5rem', padding: '0.6rem 0.75rem',
-                                        background: '#fffbeb', borderLeft: '3px solid #f59e0b',
-                                        borderRadius: '4px', fontSize: '0.76rem'
+                                        marginTop: '0.75rem',
+                                        padding: '0.75rem 1rem',
+                                        background: subStatus === 'partial' ? '#fffbeb' : '#fef2f2',
+                                        border: subStatus === 'partial' ? '1px solid #fef3c7' : '1px solid #fee2e2',
+                                        borderLeft: subStatus === 'partial' ? '3.5px solid #f59e0b' : '3.5px solid #ef4444',
+                                        borderRadius: '6px',
+                                        boxShadow: '0 1px 2px rgba(0,0,0,0.02)'
                                       }}>
-                                        <strong style={{ color: '#b45309', display: 'block', marginBottom: '0.2rem', fontSize: '0.65rem', textTransform: 'uppercase' }}>
-                                          {subStatus === 'partial' ? 'Action Required:' : 'Proposed Solution to Comply:'}
-                                        </strong>
-                                        <p style={{ color: '#78350f', margin: 0, lineHeight: 1.4 }}>{sub.proposed_solution}</p>
+                                        <div style={{
+                                          display: 'flex',
+                                          alignItems: 'center',
+                                          gap: '0.4rem',
+                                          marginBottom: '0.35rem',
+                                          color: subStatus === 'partial' ? '#b45309' : '#991b1b',
+                                          fontWeight: 700,
+                                          fontSize: '0.7rem',
+                                          textTransform: 'uppercase',
+                                          letterSpacing: '0.5px'
+                                        }}>
+                                          <AlertTriangle size={13} />
+                                          <span>{subStatus === 'partial' ? 'Remediation Action Required' : 'Proposed Solution to Comply'}</span>
+                                        </div>
+                                        <p style={{
+                                          margin: 0,
+                                          fontSize: '0.78rem',
+                                          lineHeight: 1.45,
+                                          color: subStatus === 'partial' ? '#78350f' : '#7f1d1d'
+                                        }}>{sub.proposed_solution}</p>
                                       </div>
                                     )}
                                   </div>
@@ -826,6 +903,7 @@ export default function Home() {
                         </div>
                       );
                     })}
+
                   </div>
                 </div>
 
