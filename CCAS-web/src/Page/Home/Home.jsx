@@ -484,8 +484,7 @@ export default function Home() {
               }}>
                 
                 <div className="scan-dashboard-grid">
-                  
-                  {/* Left Column: Radar and Progress Details */}
+                               {/* Left Column: Radar and Progress Details */}
                   <div style={{
                     display: 'flex',
                     flexDirection: 'column',
@@ -495,7 +494,9 @@ export default function Home() {
                     background: '#ffffff',
                     border: '1.5px solid #e2e8f0',
                     borderRadius: '8px',
-                    padding: '1.5rem'
+                    padding: '1.5rem',
+                    height: '100%',
+                    boxSizing: 'border-box'
                   }}>
                     {/* Radar — light theme */}
                     <div className="radar-container">
@@ -571,46 +572,62 @@ export default function Home() {
                     </div>
                   </div>
 
-
-                  {/* Right Column: High-contrast colorful logs */}
+                  {/* Right Column: High-contrast colorful logs taking full height */}
                   <div style={{
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: '0.75rem'
+                    gap: '0.75rem',
+                    height: '100%',
+                    boxSizing: 'border-box'
                   }}>
                     <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                       Audit Process Logs
                     </div>
-                    {/* Log panel — white */}
-                    <div className="scan-log-panel" style={{ flex: 1, minHeight: '235px' }}>
-                      <div className="scan-log-line" style={{ animationDelay: '0s' }}>
+                    {/* Log panel — white, matching height of left container */}
+                    <div className="scan-log-panel" style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: 0 }}>
+                      <div className="scan-log-line" style={{ flex: 1, padding: '0.8rem 1rem', borderBottom: '1px solid #f1f5f9', margin: 0, animationDelay: '0s' }}>
                         <span className="log-tag ok">PASS</span>
                         <span>Section 3.1 — Leadership and Oversight · matched</span>
                       </div>
-                      <div className="scan-log-line" style={{ animationDelay: '0.6s' }}>
+                      <div className="scan-log-line" style={{ flex: 1, padding: '0.8rem 1rem', borderBottom: '1px solid #f1f5f9', margin: 0, animationDelay: '0.6s' }}>
                         <span className="log-tag warn">EVAL</span>
                         <span>Section 5.1 — Access Control · analyzing...</span>
                       </div>
-                      <div className="scan-log-line" style={{ animationDelay: '1.2s' }}>
+                      <div className="scan-log-line" style={{ flex: 1, padding: '0.8rem 1rem', borderBottom: '1px solid #f1f5f9', margin: 0, animationDelay: '1.2s' }}>
                         <span className="log-tag info">SCAN</span>
                         <span>Section 8.2 — BCP/DRP · cross-referencing...</span>
                       </div>
-                      <div className="scan-log-line" style={{ animationDelay: '1.8s' }}>
+                      <div className="scan-log-line" style={{ flex: 1, padding: '0.8rem 1rem', borderBottom: '1px solid #f1f5f9', margin: 0, animationDelay: '1.8s' }}>
                         <span className="log-tag ok">PASS</span>
                         <span>Section 9.1 — Awareness Programme · confirmed</span>
                       </div>
-                      <div className="scan-log-line" style={{ animationDelay: '2.4s' }}>
+                      <div className="scan-log-line" style={{ flex: 1, padding: '0.8rem 1rem', borderBottom: '1px solid #f1f5f9', margin: 0, animationDelay: '2.4s' }}>
                         <span className="log-tag fail">FAIL</span>
                         <span>Section 6.3 — Threat Hunting · not found</span>
                       </div>
+                      {/* Active Blinking Scan Status Row */}
+                      <div className="scan-log-line" style={{ 
+                        flex: 1, 
+                        padding: '0.8rem 1rem', 
+                        margin: 0,
+                        background: 'linear-gradient(90deg, #fff7ed 0%, #ffffff 100%)', 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        animation: 'pulse-opacity 1s infinite alternate' 
+                      }}>
+                        <span className="log-tag warn">SCAN</span>
+                        <span style={{ fontWeight: 600, color: '#ea580c' }}>
+                          Analyzing: {statusMessage || 'CCoP compliance checklist mappings'}...
+                        </span>
+                        <span className="blinking-cursor">|</span>
+                      </div>
                     </div>
                   </div>
-
                 </div>
-
               </div>
             </div>
           )}
+
 
 
           {/* 3. COMPLETED STATE: COLLAPSIBLE SECTION BARS */}

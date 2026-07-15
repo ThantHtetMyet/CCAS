@@ -336,9 +336,23 @@
   flex-shrink: 0;
 }
 
-.scanning-line {
-  display: none;
+@keyframes pulse-opacity {
+  0% { opacity: 0.5; }
+  100% { opacity: 1; }
 }
+
+@keyframes blink-cursor {
+  0%, 100% { opacity: 0; }
+  50% { opacity: 1; }
+}
+
+.blinking-cursor {
+  animation: blink-cursor 0.9s infinite;
+  font-weight: 800;
+  color: #f97316;
+  margin-left: 5px;
+}
+
 
 @keyframes scan-line-movement {
   0%, 100% { top: 5px; }
@@ -716,8 +730,9 @@
   grid-template-columns: 1fr 1.2fr;
   gap: 1.5rem;
   width: 100%;
-  align-items: start;
+  align-items: stretch;
 }
+
 
 
 @media (max-width: 768px) {
