@@ -300,6 +300,10 @@ export default function Home() {
               background-color: #d1fae5;
               color: #065f46;
             }
+            .badge.partial {
+              background-color: #fef3c7;
+              color: #92400e;
+            }
             .badge.non-compliant {
               background-color: #fff7ed;
               color: #c2410c;
@@ -366,23 +370,26 @@ export default function Home() {
             </div>
           </div>
           <div class="checklist-title">Standard Controls Checklist Audit</div>
-          ${allSections.map(sec => `
+          ${allSections.map(sec => {
+            const st = normalizeStatus(sec);
+            const badgeCls = st === 'compliant' ? 'compliant' : st === 'partial' ? 'partial' : 'non-compliant';
+            const badgeTxt = st === 'compliant' ? 'Compliant' : st === 'partial' ? 'Partially Compliant' : 'Non-Compliant';
+            const actionLabel = st === 'partial' ? 'Action Required to Fully Comply:' : 'Proposed Solution to Comply:';
+            return `
             <div class="section-row">
               <div class="section-header">
                 <span class="section-name">${sec.id} - ${sec.title}</span>
-                <span class="badge ${sec.compliant ? 'compliant' : 'non-compliant'}">
-                  ${sec.compliant ? 'Compliant' : 'Non-Compliant'}
-                </span>
+                <span class="badge ${badgeCls}">${badgeTxt}</span>
               </div>
               <p class="desc">${sec.description}</p>
-              ${!sec.compliant && sec.proposed_solution ? `
+              ${(st === 'partial' || st === 'non-compliant') && sec.proposed_solution ? `
                 <div class="remediation">
-                  <strong>Proposed Solution to Comply:</strong>
+                  <strong>${actionLabel}</strong>
                   <p>${sec.proposed_solution}</p>
                 </div>
               ` : ''}
-            </div>
-          `).join('')}
+            </div>`;
+          }).join('')}
         </body>
       </html>
     `;
@@ -395,11 +402,18 @@ export default function Home() {
     }, 500);
   };
 
+  // Normalize section status: supports both old boolean 'compliant' field and new string 'status' field
+  const normalizeStatus = (sec) => {
+    if (sec.status) return sec.status; // new API: 'compliant' | 'partial' | 'non-compliant'
+    if (sec.compliant === true) return 'compliant';
+    return 'non-compliant';
+  };
+
   // Compile full sorted list of all standard controls for UI display
   const allSections = auditResult ? (
     auditResult.all_sections || [
-      ...(auditResult.matches || []).map(m => ({ ...m, compliant: true })),
-      ...(auditResult.gaps || []).map(g => ({ ...g, compliant: false }))
+      ...(auditResult.matches || []).map(m => ({ ...m, status: 'compliant' })),
+      ...(auditResult.gaps || []).map(g => ({ ...g, status: 'non-compliant' }))
     ]
   ).sort((a, b) => a.id.localeCompare(b.id)) : [];
 
@@ -530,37 +544,64 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Checklist list title */}
-              <div className="section-title-wrapper">
-                <Info size={16} style={{ color: 'var(--primary)' }} />
-                <h4>Control Checklist Assessment ({allSections.length} sections)</h4>
-              </div>
+              {/* Checklist list title with per-status breakdown */}
+              {(() => {
+                const cCount = allSections.filter(s => normalizeStatus(s) === 'compliant').length;
+                const pCount = allSections.filter(s => normalizeStatus(s) === 'partial').length;
+                const nCount = allSections.filter(s => normalizeStatus(s) === 'non-compliant').length;
+                return (
+                  <>
+                    <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.78rem', fontWeight: 600 }}>
+                      <span style={{ color: 'var(--success)' }}>✓ {cCount} Compliant</span>
+                      <span style={{ color: '#b45309' }}>◑ {pCount} Partial</span>
+                      <span style={{ color: 'var(--primary)' }}>✗ {nCount} Non-Compliant</span>
+                    </div>
+                    <div className="section-title-wrapper">
+                      <Info size={16} style={{ color: 'var(--primary)' }} />
+                      <h4>Control Checklist Assessment ({allSections.length} sections)</h4>
+                    </div>
+                  </>
+                );
+              })()}
 
               {/* Checklist items list */}
               <div className="list-wrapper">
                 <div className="items-list">
-                  {allSections.map((sec, index) => (
-                    <div key={index} className={`list-card ${sec.compliant ? 'match-card' : 'gap-card'}`}>
-                      <div className="card-header">
-                        <div className={`card-badge ${sec.compliant ? 'success' : ''}`} style={{
-                          color: sec.compliant ? 'var(--success)' : 'var(--primary)',
-                          background: sec.compliant ? 'var(--success-glow)' : 'var(--primary-glow)'
-                        }}>
-                          {sec.id || 'SECTION'} • {sec.compliant ? 'COMPLIANT' : 'NON-COMPLIANT'}
+                  {allSections.map((sec, index) => {
+                    const status = normalizeStatus(sec);
+                    const isCompliant = status === 'compliant';
+                    const isPartial = status === 'partial';
+                    const isNonCompliant = status === 'non-compliant';
+
+                    // Badge style based on three-tier status
+                    const badgeStyle = isCompliant
+                      ? { color: 'var(--success)', background: 'var(--success-glow)' }
+                      : isPartial
+                      ? { color: '#b45309', background: '#fef3c7' }
+                      : { color: 'var(--primary)', background: 'var(--primary-glow)' };
+
+                    const badgeLabel = isCompliant ? 'COMPLIANT' : isPartial ? 'PARTIALLY COMPLIANT' : 'NON-COMPLIANT';
+
+                    return (
+                      <div key={index} className={`list-card ${isCompliant ? 'match-card' : 'gap-card'}`}>
+                        <div className="card-header">
+                          <div className="card-badge" style={badgeStyle}>
+                            {sec.id || 'SECTION'} • {badgeLabel}
+                          </div>
+                          <h5>{sec.title}</h5>
                         </div>
-                        <h5>{sec.title}</h5>
+                        <p className="card-desc">{sec.description}</p>
+
+                        {/* Proposed solution for partial or non-compliant sections */}
+                        {(isPartial || isNonCompliant) && sec.proposed_solution && (
+                          <div className="remediation-box fade-in">
+                            <strong>{isPartial ? 'Action Required to Fully Comply:' : 'Proposed Solution to Comply:'}</strong>
+                            <p>{sec.proposed_solution}</p>
+                          </div>
+                        )}
                       </div>
-                      <p className="card-desc">{sec.description}</p>
-                      
-                      {/* Proposed solution for non-compliant areas */}
-                      {!sec.compliant && sec.proposed_solution && (
-                        <div className="remediation-box fade-in">
-                          <strong>Proposed Solution to Comply:</strong>
-                          <p>{sec.proposed_solution}</p>
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
 

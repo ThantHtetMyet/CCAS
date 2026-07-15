@@ -125,44 +125,63 @@ def analyze_compliance():
 
     # Load CCoP controls
     controls = load_ccop_standards()
-    controls_summary = "\n".join([
-        f"- Control {c.get('id', 'A.x')}: {c.get('title', '')} (Requirements: {c.get('requirements', c.get('reqs', ''))[:200]}...)"
+
+    # Build explicit numbered control checklist to force AI to audit ALL of them
+    control_ids_list = "\n".join([
+        f"  - {c.get('id', 'A.x')}: {c.get('title', '')}"
+        for c in controls
+    ])
+    controls_detail = "\n".join([
+        f"Control {c.get('id', 'A.x')} - {c.get('title', '')}:\n  Requirements: {c.get('requirements', c.get('reqs', ''))[:300]}"
         for c in controls
     ])
 
     # Construct Qwen system prompt & audit prompt
     system_prompt = (
-        "You are an expert Cybersecurity Auditor. Your job is to check if an uploaded "
-        "Cybersecurity Plan document complies with our CCoP (Cybersecurity Code of Practice) template.\n"
-        "Analyze the document text and cross-reference it against the provided controls.\n"
-        "Calculate a compliance score based on how many controls are fully met (roughly percentage score).\n"
-        "Return a JSON format exactly as follows, with no additional formatting, introduction, markdown blocks, or wraps:\n"
+        "You are an expert Cybersecurity Auditor. Your task is to audit an uploaded Cybersecurity Plan "
+        "against the CCoP (Cybersecurity Code of Practice) standard template.\n\n"
+        "IMPORTANT RULES:\n"
+        "1. You MUST audit and return EVERY SINGLE control listed in the reference checklist, without skipping any.\n"
+        "2. For each control, assess one of exactly three statuses:\n"
+        "   - 'compliant': The uploaded plan fully covers this control's requirements.\n"
+        "   - 'partial': The uploaded plan mentions or addresses this section but is missing some points or details.\n"
+        "   - 'non-compliant': The uploaded plan does not mention or address this section at all, or fails to meet it entirely.\n"
+        "3. If status is 'partial' or 'non-compliant', you MUST provide a 'proposed_solution' field explaining exactly what is missing and how to fix it.\n"
+        "4. compliance_percentage = (number of 'compliant' controls / total controls) * 100, rounded to nearest integer.\n\n"
+        "Return ONLY raw JSON in this exact format, no markdown, no intro text:\n"
         "{\n"
         '  "compliance_percentage": 78,\n'
         '  "all_sections": [\n'
         '    {\n'
         '      "id": "A.1",\n'
         '      "title": "Cybersecurity Governance and Leadership",\n'
-        '      "compliant": true,\n'
-        '      "description": "Proof from the plan showing they defined steering roles."\n'
+        '      "status": "compliant",\n'
+        '      "description": "The plan defines clear roles and governance structure meeting CCoP requirements."\n'
         '    },\n'
         '    {\n'
         '      "id": "A.2",\n'
         '      "title": "Asset Management",\n'
-        '      "compliant": false,\n'
-        '      "description": "Detailed explanation of what section is missing or wrong in the plan.",\n'
-        '      "proposed_solution": "Remediation step or solution description to fix this gap and comply."\n'
+        '      "status": "partial",\n'
+        '      "description": "The plan mentions asset inventory but lacks security classification and designated owners.",\n'
+        '      "proposed_solution": "Add asset classification levels (Critical/High/Medium/Low) and assign named owners for each asset category to fully comply."\n'
+        '    },\n'
+        '    {\n'
+        '      "id": "A.4",\n'
+        '      "title": "Access Control",\n'
+        '      "status": "non-compliant",\n'
+        '      "description": "The uploaded plan does not contain any section addressing access control or authentication policies.",\n'
+        '      "proposed_solution": "Create a dedicated Access Control section. Define MFA requirements for all administrative access, password policy standards, and privilege escalation review schedules."\n'
         '    }\n'
         '  ]\n'
         "}\n"
-        "Be sure to audit and list EVERY SINGLE reference control provided in the prompt. "
-        "Do not include any extra chat dialogue. Output ONLY raw JSON."
     )
 
     user_content = (
-        f"CCoP Standard Reference Controls:\n{controls_summary}\n\n"
-        f"Uploaded Cybersecurity Plan Text (Excerpt):\n{extracted_text[:12000]}\n\n" # Limit text input to stay safe on context lengths
-        "Perform audit and output raw JSON compliance metrics."
+        f"REFERENCE CONTROL CHECKLIST - You MUST output a result for EACH of these {len(controls)} controls:\n"
+        f"{control_ids_list}\n\n"
+        f"DETAILED CONTROL REQUIREMENTS:\n{controls_detail}\n\n"
+        f"UPLOADED PLAN TEXT:\n{extracted_text[:10000]}\n\n"
+        f"Audit every single control listed above. Return raw JSON only."
     )
 
     print("[*] Contacting LM Studio API...")
