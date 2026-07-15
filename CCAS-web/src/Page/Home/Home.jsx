@@ -9,7 +9,9 @@ import {
   ShieldCheck,
   RefreshCw,
   Download,
-  Info
+  Info,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import './Home.css';
 
@@ -20,6 +22,7 @@ export default function Home() {
   const [progress, setProgress] = useState(0);
   const [statusMessage, setStatusMessage] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
+  const [expandedSections, setExpandedSections] = useState({}); // track open/close per section
   
   // Real API audit result state
   const [auditResult, setAuditResult] = useState(null);
@@ -402,20 +405,43 @@ export default function Home() {
     }, 500);
   };
 
-  // Normalize section status: supports both old boolean 'compliant' field and new string 'status' field
+  // Normalize subsection/section status
   const normalizeStatus = (sec) => {
-    if (sec.status) return sec.status; // new API: 'compliant' | 'partial' | 'non-compliant'
+    if (sec.status) return sec.status;
+    if (sec.overall_status) return sec.overall_status;
     if (sec.compliant === true) return 'compliant';
     return 'non-compliant';
   };
 
-  // Compile full sorted list of all standard controls for UI display
-  const allSections = auditResult ? (
-    auditResult.all_sections || [
-      ...(auditResult.matches || []).map(m => ({ ...m, status: 'compliant' })),
-      ...(auditResult.gaps || []).map(g => ({ ...g, status: 'non-compliant' }))
-    ]
-  ).sort((a, b) => a.id.localeCompare(b.id)) : [];
+  // Get color config for a given status
+  const statusConfig = (status) => {
+    if (status === 'compliant')     return { bg: '#d1fae5', border: '#10b981', text: '#065f46', label: 'COMPLIANT',           dot: '#10b981' };
+    if (status === 'partial')       return { bg: '#fef3c7', border: '#f59e0b', text: '#92400e', label: 'PARTIALLY COMPLIANT', dot: '#f59e0b' };
+    return                                 { bg: '#fee2e2', border: '#ef4444', text: '#991b1b', label: 'NON-COMPLIANT',        dot: '#ef4444' };
+  };
+
+  // Toggle a section open/closed
+  const toggleSection = (num) => {
+    setExpandedSections(prev => ({ ...prev, [num]: !prev[num] }));
+  };
+
+  // Derive sections list from API response — supports new hierarchical format OR old flat format
+  const auditSections = auditResult
+    ? (auditResult.sections || (() => {
+        // Fallback: convert old flat all_sections into grouped sections
+        const flat = auditResult.all_sections || [
+          ...(auditResult.matches || []).map(m => ({ ...m, status: 'compliant' })),
+          ...(auditResult.gaps || []).map(g => ({ ...g, status: 'non-compliant' })),
+        ];
+        return flat.map((s, i) => ({
+          section_num: i + 1,
+          section_title: s.title,
+          overall_status: normalizeStatus(s),
+          subsections: [{ id: s.id, title: s.title, status: normalizeStatus(s), description: s.description, proposed_solution: s.proposed_solution }]
+        }));
+      })())
+    : [];
+
 
   return (
     <div className="portal-container">
@@ -509,114 +535,188 @@ export default function Home() {
             </div>
           )}
 
-          {/* 3. COMPLETED STATE: VERIFIED DISPLAY */}
-          {uploadState === 'completed' && auditResult && (
-            <div className="state-content fade-in">
-              <div className="success-header">
-                <div className="success-icon-wrapper">
-                  <CheckCircle2 size={36} className="success-icon" />
-                </div>
-                <div className="title-section" style={{ flex: 1 }}>
-                  <h2 className="success-title">Audit Report Generated</h2>
-                  <p>Analyzed: <strong>{file?.name}</strong> ({file?.size})</p>
-                </div>
-              </div>
+          {/* 3. COMPLETED STATE: COLLAPSIBLE SECTION BARS */}
+          {uploadState === 'completed' && auditResult && (() => {
+            const pct = auditResult.compliance_percentage ?? 0;
+            const pctColor = pct >= 85 ? '#10b981' : pct >= 60 ? '#f59e0b' : '#ef4444';
+            const totalSubs = auditSections.reduce((acc, s) => acc + (s.subsections?.length || 0), 0);
+            const compliantSubs = auditSections.reduce((acc, s) => acc + (s.subsections?.filter(sub => normalizeStatus(sub) === 'compliant').length || 0), 0);
+            const partialSubs = auditSections.reduce((acc, s) => acc + (s.subsections?.filter(sub => normalizeStatus(sub) === 'partial').length || 0), 0);
+            const nonSubs = totalSubs - compliantSubs - partialSubs;
 
-              {/* Compliance score header card */}
-              <div className="score-summary-card">
-                <div className="radial-score-box">
-                  <span className="score-val" style={{
-                    color: auditResult.compliance_percentage >= 85 ? 'var(--success)' : auditResult.compliance_percentage >= 60 ? 'var(--primary)' : 'var(--danger)'
+            return (
+              <div className="state-content fade-in">
+
+                {/* Header */}
+                <div className="success-header">
+                  <div className="success-icon-wrapper">
+                    <CheckCircle2 size={28} className="success-icon" />
+                  </div>
+                  <div className="title-section" style={{ flex: 1 }}>
+                    <h2 className="success-title">Audit Report Generated</h2>
+                    <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                      Analyzed: <strong>{file?.name}</strong>
+                    </p>
+                  </div>
+                </div>
+
+                {/* ── Percentage Gauge ── */}
+                <div style={{
+                  background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
+                  borderRadius: '12px',
+                  padding: '1.25rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '1.25rem',
+                  border: '1px solid #334155'
+                }}>
+                  {/* Circular score */}
+                  <div style={{
+                    position: 'relative',
+                    width: '80px', height: '80px', flexShrink: 0
                   }}>
-                    {auditResult.compliance_percentage}%
-                  </span>
-                  <span className="score-lbl">Adherence</span>
-                </div>
-                <div className="score-details">
-                  <h4>Assessment Verdict</h4>
-                  <p>
-                    {auditResult.compliance_percentage >= 85 
-                      ? 'The plan aligns with target CCoP mandates. Review the minor gaps identified below.' 
-                      : auditResult.compliance_percentage >= 60 
-                      ? 'Action required. The plan contains critical gaps that must be addressed.' 
-                      : 'Non-Compliant. Critical security controls are absent or not defined.'}
-                  </p>
-                </div>
-              </div>
-
-              {/* Checklist list title with per-status breakdown */}
-              {(() => {
-                const cCount = allSections.filter(s => normalizeStatus(s) === 'compliant').length;
-                const pCount = allSections.filter(s => normalizeStatus(s) === 'partial').length;
-                const nCount = allSections.filter(s => normalizeStatus(s) === 'non-compliant').length;
-                return (
-                  <>
-                    <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.78rem', fontWeight: 600 }}>
-                      <span style={{ color: 'var(--success)' }}>✓ {cCount} Compliant</span>
-                      <span style={{ color: '#b45309' }}>◑ {pCount} Partial</span>
-                      <span style={{ color: 'var(--primary)' }}>✗ {nCount} Non-Compliant</span>
+                    <svg width="80" height="80" style={{ transform: 'rotate(-90deg)' }}>
+                      <circle cx="40" cy="40" r="34" fill="none" stroke="#334155" strokeWidth="7"/>
+                      <circle cx="40" cy="40" r="34" fill="none" stroke={pctColor} strokeWidth="7"
+                        strokeDasharray={`${2 * Math.PI * 34}`}
+                        strokeDashoffset={`${2 * Math.PI * 34 * (1 - pct / 100)}`}
+                        strokeLinecap="round"
+                        style={{ transition: 'stroke-dashoffset 1s ease' }}
+                      />
+                    </svg>
+                    <div style={{
+                      position: 'absolute', inset: 0, display: 'flex',
+                      flexDirection: 'column', alignItems: 'center', justifyContent: 'center'
+                    }}>
+                      <span style={{ fontSize: '1.1rem', fontWeight: 800, color: pctColor, lineHeight: 1 }}>{pct}%</span>
+                      <span style={{ fontSize: '0.55rem', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Score</span>
                     </div>
-                    <div className="section-title-wrapper">
-                      <Info size={16} style={{ color: 'var(--primary)' }} />
-                      <h4>Control Checklist Assessment ({allSections.length} sections)</h4>
+                  </div>
+
+                  {/* Stats */}
+                  <div style={{ flex: 1 }}>
+                    <div style={{ color: '#f8fafc', fontWeight: 700, fontSize: '0.95rem', marginBottom: '0.4rem' }}>
+                      Overall Compliance Score
                     </div>
-                  </>
-                );
-              })()}
+                    <div style={{ fontSize: '0.75rem', color: pctColor, marginBottom: '0.6rem' }}>
+                      {pct >= 85 ? '✓ Plan aligns with CCoP v2.1 mandates.'
+                        : pct >= 60 ? '⚠ Action required — critical gaps identified.'
+                        : '✗ Non-compliant — major controls missing.'}
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.72rem', fontWeight: 600 }}>
+                      <span style={{ color: '#10b981' }}>✓ {compliantSubs} Compliant</span>
+                      <span style={{ color: '#f59e0b' }}>◑ {partialSubs} Partial</span>
+                      <span style={{ color: '#ef4444' }}>✗ {nonSubs} Non-Compliant</span>
+                      <span style={{ color: '#64748b' }}>/ {totalSubs} total controls</span>
+                    </div>
+                  </div>
+                </div>
 
-              {/* Checklist items list */}
-              <div className="list-wrapper">
-                <div className="items-list">
-                  {allSections.map((sec, index) => {
-                    const status = normalizeStatus(sec);
-                    const isCompliant = status === 'compliant';
-                    const isPartial = status === 'partial';
-                    const isNonCompliant = status === 'non-compliant';
+                {/* ── Section label ── */}
+                <div className="section-title-wrapper" style={{ marginTop: '0.25rem' }}>
+                  <Info size={15} style={{ color: 'var(--primary)' }} />
+                  <h4>CCoP v2.1 Section Compliance ({auditSections.length} sections)</h4>
+                </div>
 
-                    // Badge style based on three-tier status
-                    const badgeStyle = isCompliant
-                      ? { color: 'var(--success)', background: 'var(--success-glow)' }
-                      : isPartial
-                      ? { color: '#b45309', background: '#fef3c7' }
-                      : { color: 'var(--primary)', background: 'var(--primary-glow)' };
+                {/* ── Collapsible Section Bars ── */}
+                <div className="list-wrapper" style={{ maxHeight: '360px' }}>
+                  <div className="items-list">
+                    {auditSections.map((section) => {
+                      const secStatus = section.overall_status || normalizeStatus(section);
+                      const cfg = statusConfig(secStatus);
+                      const isOpen = !!expandedSections[section.section_num];
 
-                    const badgeLabel = isCompliant ? 'COMPLIANT' : isPartial ? 'PARTIALLY COMPLIANT' : 'NON-COMPLIANT';
+                      return (
+                        <div key={section.section_num} style={{ borderRadius: '8px', overflow: 'hidden', border: `1.5px solid ${cfg.border}` }}>
 
-                    return (
-                      <div key={index} className={`list-card ${isCompliant ? 'match-card' : 'gap-card'}`}>
-                        <div className="card-header">
-                          <div className="card-badge" style={badgeStyle}>
-                            {sec.id || 'SECTION'} • {badgeLabel}
-                          </div>
-                          <h5>{sec.title}</h5>
+                          {/* Section header bar — click to toggle */}
+                          <button
+                            onClick={() => toggleSection(section.section_num)}
+                            style={{
+                              width: '100%', display: 'flex', alignItems: 'center',
+                              gap: '0.6rem', padding: '0.75rem 1rem',
+                              background: cfg.bg, border: 'none', cursor: 'pointer',
+                              textAlign: 'left'
+                            }}
+                          >
+                            {/* Status dot */}
+                            <span style={{
+                              width: '10px', height: '10px', borderRadius: '50%',
+                              background: cfg.dot, flexShrink: 0, boxShadow: `0 0 6px ${cfg.dot}88`
+                            }} />
+                            <span style={{ flex: 1, fontWeight: 700, fontSize: '0.85rem', color: '#0f172a' }}>
+                              Section {section.section_num}: {section.section_title}
+                            </span>
+                            <span style={{
+                              fontSize: '0.62rem', fontWeight: 700, padding: '2px 7px',
+                              borderRadius: '4px', background: cfg.dot + '22', color: cfg.text,
+                              border: `1px solid ${cfg.dot}55`, whiteSpace: 'nowrap'
+                            }}>
+                              {cfg.label}
+                            </span>
+                            <span style={{ color: cfg.text, flexShrink: 0 }}>
+                              {isOpen ? <ChevronUp size={16}/> : <ChevronDown size={16}/>}
+                            </span>
+                          </button>
+
+                          {/* Expanded subsections */}
+                          {isOpen && (
+                            <div style={{ background: '#fafafa', borderTop: `1px solid ${cfg.border}44`, padding: '0.5rem 0.75rem', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                              {(section.subsections || []).map((sub) => {
+                                const subStatus = normalizeStatus(sub);
+                                const subCfg = statusConfig(subStatus);
+                                return (
+                                  <div key={sub.id} style={{
+                                    background: '#ffffff', border: `1px solid ${subCfg.border}44`,
+                                    borderLeft: `3px solid ${subCfg.dot}`, borderRadius: '6px',
+                                    padding: '0.7rem 0.85rem'
+                                  }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.35rem' }}>
+                                      <span style={{
+                                        fontSize: '0.6rem', fontWeight: 700, padding: '2px 6px',
+                                        borderRadius: '3px', background: subCfg.bg, color: subCfg.text,
+                                        border: `1px solid ${subCfg.border}44`
+                                      }}>{sub.id} • {subCfg.label}</span>
+                                    </div>
+                                    <div style={{ fontWeight: 700, fontSize: '0.82rem', color: '#0f172a', marginBottom: '0.25rem' }}>{sub.title}</div>
+                                    <p style={{ fontSize: '0.78rem', color: '#475569', lineHeight: 1.45, margin: 0 }}>{sub.description}</p>
+                                    {(subStatus === 'partial' || subStatus === 'non-compliant') && sub.proposed_solution && (
+                                      <div style={{
+                                        marginTop: '0.5rem', padding: '0.6rem 0.75rem',
+                                        background: '#fffbeb', borderLeft: '3px solid #f59e0b',
+                                        borderRadius: '4px', fontSize: '0.76rem'
+                                      }}>
+                                        <strong style={{ color: '#b45309', display: 'block', marginBottom: '0.2rem', fontSize: '0.65rem', textTransform: 'uppercase' }}>
+                                          {subStatus === 'partial' ? 'Action Required:' : 'Proposed Solution to Comply:'}
+                                        </strong>
+                                        <p style={{ color: '#78350f', margin: 0, lineHeight: 1.4 }}>{sub.proposed_solution}</p>
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
                         </div>
-                        <p className="card-desc">{sec.description}</p>
+                      );
+                    })}
+                  </div>
+                </div>
 
-                        {/* Proposed solution for partial or non-compliant sections */}
-                        {(isPartial || isNonCompliant) && sec.proposed_solution && (
-                          <div className="remediation-box fade-in">
-                            <strong>{isPartial ? 'Action Required to Fully Comply:' : 'Proposed Solution to Comply:'}</strong>
-                            <p>{sec.proposed_solution}</p>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
+                {/* Action buttons */}
+                <div className="button-group" style={{ display: 'flex', gap: '1rem' }}>
+                  <button className="btn-secondary" onClick={downloadPdfReport} style={{ flex: 1 }}>
+                    <Download size={14} />
+                    <span>Download PDF Report</span>
+                  </button>
+                  <button className="btn-reset" onClick={resetUploader} style={{ flex: 1 }}>
+                    <RefreshCw size={14} />
+                    <span>Analyze Another Plan</span>
+                  </button>
                 </div>
               </div>
-
-              <div className="button-group" style={{ display: 'flex', gap: '1rem' }}>
-                <button className="btn-secondary" onClick={downloadPdfReport} style={{ flex: 1 }}>
-                  <Download size={14} />
-                  <span>Download PDF Report</span>
-                </button>
-                <button className="btn-reset" onClick={resetUploader} style={{ flex: 1 }}>
-                  <RefreshCw size={14} />
-                  <span>Analyze Another Plan</span>
-                </button>
-              </div>
-            </div>
-          )}
+            );
+          })()}
 
         </div>
       </main>

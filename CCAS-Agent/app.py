@@ -17,20 +17,25 @@ CORS(app) # Allow cross-origin requests from React dev server (port 5173)
 LM_STUDIO_URL = "http://192.3.71.67:1234/v1/chat/completions"
 MODEL_ID = "qwen-3-14b-instruct:2"
 
-# Fallback CCoP controls if prepared JSON is missing
+# Fallback CCoP controls (hierarchical) if JSON file is missing
 DEFAULT_CONTROLS = [
-  {"id": "A.1", "title": "Cybersecurity Governance and Leadership", "reqs": "Define clear cybersecurity roles, assign responsibilities to Project Managers/Security Officers, and set up a governance steering committee."},
-  {"id": "A.2", "title": "Asset Management", "reqs": "Establish a centralized, up-to-date registry of hardware/software assets with designated owners and security classifications."},
-  {"id": "A.4", "title": "Access Control", "reqs": "Enforce strong authentication mechanisms, mandatory Multi-Factor Authentication (MFA) for administrative gateways, and privilege escalation logging."},
-  {"id": "A.5", "title": "Communications and Operations Security", "reqs": "Implement network firewalls, encrypted communication tunnels (TLS 1.3/SSH v2), security logging, and monitoring checks."},
-  {"id": "A.7", "title": "Cybersecurity Incident Management", "reqs": "Formulate a formal incident response plan (IRP) with clear escalation hierarchies, contact details, and response procedures."},
-  {"id": "A.10", "title": "Business Continuity and Disaster Recovery", "reqs": "Document data backup frequency, retention intervals, and define schedule plans for disaster recovery (DR) simulations."},
-  {"id": "A.12", "title": "Cryptographic Controls", "reqs": "Establish rules for data encryption (AES-256 for resting data) and robust key management policies."}
+  {"section_num": 3, "section_title": "Governance Requirements", "subsections": [
+    {"id": "3.1", "title": "Leadership and Oversight", "requirements": "Cybersecurity governance structure with defined leadership roles must be established."},
+    {"id": "3.2", "title": "Risk Management", "requirements": "Risk management framework with regular assessments and treatment plans must exist."},
+  ]},
+  {"section_num": 4, "section_title": "Identification Requirements", "subsections": [
+    {"id": "4.1", "title": "Asset Management", "requirements": "Maintain a comprehensive inventory of all CII assets with ownership and classifications."},
+  ]},
+  {"section_num": 5, "section_title": "Protection Requirements", "subsections": [
+    {"id": "5.1", "title": "Access Control", "requirements": "MFA and access control commensurate with risk profile must be implemented."},
+    {"id": "5.3", "title": "Privileged Access Management", "requirements": "Privileged accounts must use MFA and be controlled."},
+  ]},
 ]
 
 def load_ccop_standards():
     """
-    Loads CCoP controls from JSON database. Falls back to default list if missing.
+    Loads CCoP controls from hierarchical JSON. Falls back to default list if missing.
+    Returns list of sections, each with section_num, section_title, and subsections[].
     """
     script_dir = os.path.dirname(os.path.abspath(__file__))
     json_path = os.path.join(script_dir, "data", "ccop_controls.json")
@@ -107,7 +112,6 @@ def analyze_compliance():
     extracted_text = None
     if ext == "pdf":
         extracted_text = extract_pdf_text(temp_file_path)
-        # Fallback if pypdf is missing or failed
         if not extracted_text:
             os.remove(temp_file_path)
             return jsonify({
@@ -123,66 +127,107 @@ def analyze_compliance():
     if not extracted_text or len(extracted_text.strip()) == 0:
         return jsonify({"error": "The uploaded document contains no readable text."}), 400
 
-    # Load CCoP controls
-    controls = load_ccop_standards()
+    # Load CCoP hierarchical controls
+    sections = load_ccop_standards()
 
-    # Build explicit numbered control checklist to force AI to audit ALL of them
-    control_ids_list = "\n".join([
-        f"  - {c.get('id', 'A.x')}: {c.get('title', '')}"
-        for c in controls
-    ])
-    controls_detail = "\n".join([
-        f"Control {c.get('id', 'A.x')} - {c.get('title', '')}:\n  Requirements: {c.get('requirements', c.get('reqs', ''))[:300]}"
-        for c in controls
+    # Build flat subsection list and checklist string for the prompt
+    all_subsections = []
+    for section in sections:
+        for sub in section.get("subsections", []):
+            all_subsections.append({
+                "section_num": section["section_num"],
+                "section_title": section["section_title"],
+                "id": sub["id"],
+                "title": sub["title"],
+                "requirements": sub.get("requirements", "")
+            })
+
+    total_subsections = len(all_subsections)
+
+    # Build checklist string — include requirements and topic keyword hints for semantic matching
+    checklist_str = "\n".join([
+        (
+            f"  [{sub['id']}] {sub['title']} "
+            f"(Topics/keywords to search for: {', '.join(sub.get('topics', [])) if sub.get('topics') else 'see requirements'}) "
+            f"— Requirement: {sub['requirements'][:200]}"
+        )
+        for sub in all_subsections
     ])
 
-    # Construct Qwen system prompt & audit prompt
+
+    # Construct system prompt with explicit semantic matching instructions
     system_prompt = (
-        "You are an expert Cybersecurity Auditor. Your task is to audit an uploaded Cybersecurity Plan "
-        "against the CCoP (Cybersecurity Code of Practice) standard template.\n\n"
-        "IMPORTANT RULES:\n"
-        "1. You MUST audit and return EVERY SINGLE control listed in the reference checklist, without skipping any.\n"
-        "2. For each control, assess one of exactly three statuses:\n"
-        "   - 'compliant': The uploaded plan fully covers this control's requirements.\n"
-        "   - 'partial': The uploaded plan mentions or addresses this section but is missing some points or details.\n"
-        "   - 'non-compliant': The uploaded plan does not mention or address this section at all, or fails to meet it entirely.\n"
-        "3. If status is 'partial' or 'non-compliant', you MUST provide a 'proposed_solution' field explaining exactly what is missing and how to fix it.\n"
-        "4. compliance_percentage = (number of 'compliant' controls / total controls) * 100, rounded to nearest integer.\n\n"
-        "Return ONLY raw JSON in this exact format, no markdown, no intro text:\n"
+        "You are an expert Cybersecurity Auditor assessing compliance against the CCoP "
+        "(Cybersecurity Code of Practice) v2.1 for Critical Information Infrastructure Owners (CIIOs).\n\n"
+
+        "=== CRITICAL INSTRUCTION: SEMANTIC TOPIC MATCHING ===\n"
+        "The uploaded plan document will NOT use the same section titles or numbering as the CCoP standard.\n"
+        "You MUST search the entire document text for CONTENT and CONCEPTS that correspond to each CCoP control,\n"
+        "regardless of how the document is organised or what its sections are called.\n\n"
+        "For example:\n"
+        "  - A document section titled 'User Authentication' covers CCoP 5.1 (Access Control)\n"
+        "  - A section titled 'IT Risk Review' covers CCoP 3.2 (Risk Management)\n"
+        "  - A section titled 'Backup Procedures' covers CCoP 8.1 (Backup and Restoration Plan)\n"
+        "  - A section titled 'Staff Security Training' covers CCoP 9.1 (Cybersecurity Awareness Programme)\n"
+        "Do NOT require the document to have the same section title as the CCoP. Look for the TOPIC and SUBSTANCE.\n\n"
+
+        "=== AUDIT RULES ===\n"
+        f"1. Audit ALL {total_subsections} CCoP subsections below. Do NOT skip any.\n"
+        "2. For each subsection, read the FULL uploaded plan text and look for any content that addresses\n"
+        "   the topic, concept, or requirement described — even if it uses different words or appears\n"
+        "   in a different section of the plan.\n"
+        "3. Assign one of exactly three statuses:\n"
+        "   - 'compliant': The plan adequately addresses the topic and satisfies the requirement.\n"
+        "   - 'partial': The plan mentions or partially addresses the topic but is missing key details or elements.\n"
+        "   - 'non-compliant': The plan has NO content at all related to this topic, or the content present\n"
+        "     is so inadequate it cannot be considered addressed.\n"
+        "4. For 'partial' or 'non-compliant', provide a 'proposed_solution' with specific steps to fix the gap.\n"
+        "5. In the 'description' field, cite what you found (or didn't find) in the uploaded plan text.\n"
+        "6. Group all subsection results under their parent section.\n"
+        "7. Set each section's overall_status:\n"
+        "   - 'compliant' if ALL subsections in that section are compliant.\n"
+        "   - 'partial' if any subsection is partial but none are non-compliant.\n"
+        "   - 'non-compliant' if any subsection is non-compliant.\n"
+        "8. compliance_percentage = (count of 'compliant' subsections / total subsections) * 100, rounded.\n\n"
+
+        "Return ONLY raw JSON, no markdown, no commentary, in this EXACT format:\n"
         "{\n"
-        '  "compliance_percentage": 78,\n'
-        '  "all_sections": [\n'
+        '  "compliance_percentage": 72,\n'
+        '  "sections": [\n'
         '    {\n'
-        '      "id": "A.1",\n'
-        '      "title": "Cybersecurity Governance and Leadership",\n'
-        '      "status": "compliant",\n'
-        '      "description": "The plan defines clear roles and governance structure meeting CCoP requirements."\n'
-        '    },\n'
-        '    {\n'
-        '      "id": "A.2",\n'
-        '      "title": "Asset Management",\n'
-        '      "status": "partial",\n'
-        '      "description": "The plan mentions asset inventory but lacks security classification and designated owners.",\n'
-        '      "proposed_solution": "Add asset classification levels (Critical/High/Medium/Low) and assign named owners for each asset category to fully comply."\n'
-        '    },\n'
-        '    {\n'
-        '      "id": "A.4",\n'
-        '      "title": "Access Control",\n'
-        '      "status": "non-compliant",\n'
-        '      "description": "The uploaded plan does not contain any section addressing access control or authentication policies.",\n'
-        '      "proposed_solution": "Create a dedicated Access Control section. Define MFA requirements for all administrative access, password policy standards, and privilege escalation review schedules."\n'
+        '      "section_num": 3,\n'
+        '      "section_title": "Governance Requirements",\n'
+        '      "overall_status": "partial",\n'
+        '      "subsections": [\n'
+        '        {\n'
+        '          "id": "3.1",\n'
+        '          "title": "Leadership and Oversight",\n'
+        '          "status": "compliant",\n'
+        '          "description": "Found in plan under \'Project Organisation\': defines Cybersecurity Manager, IT Security Officer and steering roles."\n'
+        '        },\n'
+        '        {\n'
+        '          "id": "3.2",\n'
+        '          "title": "Risk Management",\n'
+        '          "status": "partial",\n'
+        '          "description": "Plan mentions annual risk reviews in Section 4 but lacks a formal risk treatment plan with owners and timelines.",\n'
+        '          "proposed_solution": "Add a Risk Treatment Plan appendix defining each identified risk, its owner, mitigation action, target date, and residual risk acceptance."\n'
+        '        }\n'
+        '      ]\n'
         '    }\n'
         '  ]\n'
         "}\n"
     )
 
     user_content = (
-        f"REFERENCE CONTROL CHECKLIST - You MUST output a result for EACH of these {len(controls)} controls:\n"
-        f"{control_ids_list}\n\n"
-        f"DETAILED CONTROL REQUIREMENTS:\n{controls_detail}\n\n"
-        f"UPLOADED PLAN TEXT:\n{extracted_text[:10000]}\n\n"
-        f"Audit every single control listed above. Return raw JSON only."
+        f"CCoP SUBSECTION CHECKLIST — audit ALL {total_subsections} items using semantic topic matching:\n"
+        f"{checklist_str}\n\n"
+        f"UPLOADED CYBERSECURITY PLAN TEXT (search the entire text below for relevant content):\n"
+        f"{extracted_text[:9000]}\n\n"
+        "Audit every subsection by finding related content anywhere in the uploaded plan text. "
+        "Do NOT require matching section titles. Return raw JSON only."
     )
+
+
 
     print("[*] Contacting LM Studio API...")
     try:
