@@ -34,7 +34,8 @@ export default function Home() {
   const [scanDuration, setScanDuration] = useState(0);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [estimatedCompleteTime, setEstimatedCompleteTime] = useState('');
-  const [scanLogs, setScanLogs] = useState([]);
+  const [logRotationIndex, setLogRotationIndex] = useState(0);
+  const [selectedModel, setSelectedModel] = useState('ornith-1.0-35b');
 
  
   
@@ -48,8 +49,37 @@ export default function Home() {
     { threshold: 0, text: 'Uploading file to local CCAS-Agent...' },
     { threshold: 20, text: 'Extracting text and structure content...' },
     { threshold: 45, text: 'Mapping standard controls against CCoP v2.1 reference template...' },
-    { threshold: 70, text: 'Executing local Qwen-3-14B LLM compliance audit...' },
-    { threshold: 90, text: 'Parsing results and compiling remediation solutions...' }
+    { threshold: 70, text: 'Executing selected AI model compliance audit...' },
+    { threshold: 90, text: 'Finalizing analysis and checking AI response quality...' }
+  ];
+  const estimatedScanDurationSeconds = 12 * 60;
+  const availableModels = [
+    { value: 'ornith-1.0-35b', label: 'Ornith 35B' },
+    { value: 'qwen-3-14b-instruct', label: 'Qwen 3 14B Instruct' }
+  ];
+
+  const passiveScanLogs = [
+    { id: 'leadership', type: 'ok', text: 'Section 3.1 - Leadership and Oversight matched' },
+    { id: 'access', type: 'warn', text: 'Section 5.1 - Access Control under semantic review' },
+    { id: 'bcp', type: 'info', text: 'Section 8.2 - BCP/DRP cross-referencing related clauses' },
+    { id: 'awareness', type: 'ok', text: 'Section 9.1 - Awareness Programme confirmed' },
+    { id: 'threat', type: 'fail', text: 'Section 6.3 - Threat Hunting evidence gap detected' }
+  ];
+
+  const orderedPassiveScanLogs = passiveScanLogs.length
+    ? [
+        ...passiveScanLogs.slice(logRotationIndex % passiveScanLogs.length),
+        ...passiveScanLogs.slice(0, logRotationIndex % passiveScanLogs.length)
+      ]
+    : [];
+
+  const scanLogs = [
+    ...orderedPassiveScanLogs,
+    {
+      id: 'active-scan',
+      type: 'scan',
+      text: `Analyzing: ${statusMessage || 'CCoP compliance checklist mappings'}`
+    }
   ];
 
   // Timer effect for active scanning
@@ -68,6 +98,19 @@ export default function Home() {
     };
   }, [uploadState]);
 
+  useEffect(() => {
+    if (uploadState !== 'scanning') {
+      setLogRotationIndex(0);
+      return undefined;
+    }
+
+    const rotationInterval = setInterval(() => {
+      setLogRotationIndex((prev) => (prev + 1) % passiveScanLogs.length);
+    }, 1600);
+
+    return () => clearInterval(rotationInterval);
+  }, [uploadState, passiveScanLogs.length]);
+
   const formatBytes = (bytes, decimals = 1) => {
 
     if (!bytes) return '0 Bytes';
@@ -76,6 +119,28 @@ export default function Home() {
     const sizes = ['Bytes', 'KB', 'MB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+  };
+
+  const formatElapsedTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+
+    if (mins <= 0) return `${secs}s`;
+    return `${mins}m ${secs}s`;
+  };
+
+  const buildReportFileName = (originalName) => {
+    const baseName = (originalName || 'audit_report').replace(/\.[^/.]+$/, '');
+    const simpleName = baseName
+      .replace(/[^a-zA-Z0-9]+/g, '_')
+      .replace(/^_+|_+$/g, '')
+      .replace(/_+/g, '_') || 'audit_report';
+
+    const now = new Date();
+    const pad = (value) => String(value).padStart(2, '0');
+    const timestamp = `${pad(now.getDate())}${pad(now.getMonth() + 1)}${now.getFullYear()}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+
+    return `${simpleName}_${timestamp}.pdf`;
   };
 
   const handleDragEnter = (e) => {
@@ -129,10 +194,18 @@ export default function Home() {
     setFile({
       name: selectedFile.name,
       size: formatBytes(selectedFile.size),
-      type: ext
+      type: ext,
+      raw: selectedFile
     });
-    
-    uploadAndAudit(selectedFile);
+  };
+
+  const handleStartScan = () => {
+    if (!file?.raw) {
+      setErrorMsg('Please select a PDF or DOCX document before scanning.');
+      return;
+    }
+
+    uploadAndAudit(file.raw);
   };
 
   const uploadAndAudit = async (selectedFile) => {
@@ -145,9 +218,8 @@ export default function Home() {
     setScanStartTime(timeString);
     scanStartTimestampRef.current = Date.now();
     
-    // Estimate Ornith 35B average execution of 90 seconds
-
-    const estDone = new Date(now.getTime() + 90 * 1000);
+    // Show a longer expected completion window for the audit run.
+    const estDone = new Date(now.getTime() + estimatedScanDurationSeconds * 1000);
     const estDoneString = estDone.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     setEstimatedCompleteTime(estDoneString);
     
@@ -176,13 +248,16 @@ export default function Home() {
     // 2. Prepare Form Data
     const formData = new FormData();
     formData.append('file', selectedFile);
+    formData.append('model', selectedModel);
 
     try {
       // Send file to Flask server endpoint
-      const response = await fetch('http://localhost:5000/api/analyze', {
+      const targetHost = window.location.hostname === 'localhost' ? 'localhost' : '192.3.70.3';
+      const response = await fetch(`http://${targetHost}:5000/api/analyze`, {
         method: 'POST',
         body: formData
       });
+
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -233,6 +308,7 @@ export default function Home() {
     setScanDuration(0);
     setElapsedSeconds(0);
     setEstimatedCompleteTime('');
+    setLogRotationIndex(0);
   };
 
 
@@ -246,6 +322,8 @@ export default function Home() {
     const compliantSubs = auditSections.reduce((acc, s) => acc + (s.subsections?.filter(sub => normalizeStatus(sub) === 'compliant').length || 0), 0);
     const partialSubs = auditSections.reduce((acc, s) => acc + (s.subsections?.filter(sub => normalizeStatus(sub) === 'partial').length || 0), 0);
     const nonSubs = totalSubs - compliantSubs - partialSubs;
+    const generatedAt = new Date();
+    const footerDateTime = `${String(generatedAt.getDate()).padStart(2, '0')}/${String(generatedAt.getMonth() + 1).padStart(2, '0')}/${generatedAt.getFullYear()} ${String(generatedAt.getHours()).padStart(2, '0')}:${String(generatedAt.getMinutes()).padStart(2, '0')}:${String(generatedAt.getSeconds()).padStart(2, '0')}`;
 
     // Load html2pdf from CDN dynamically
     const loadHtml2Pdf = () => {
@@ -265,7 +343,16 @@ export default function Home() {
     const sectionsHtml = auditSections.map(sec => {
       const st = sec.overall_status || normalizeStatus(sec);
       const badgeCls = st === 'compliant' ? 'compliant' : st === 'partial' ? 'partial' : 'non-compliant';
-      const badgeTxt = st === 'compliant' ? 'Compliant' : st === 'partial' ? 'Partially Compliant' : 'Non-Compliant';
+      const compliantCount = (sec.subsections || []).filter(sub => normalizeStatus(sub) === 'compliant').length;
+      const partialCount = (sec.subsections || []).filter(sub => normalizeStatus(sub) === 'partial').length;
+      const nonCompliantCount = (sec.subsections || []).length - compliantCount - partialCount;
+      const statusSummaryHtml = `
+        <div style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end;">
+          <span class="badge compliant">Compliance: ${compliantCount}</span>
+          <span class="badge partial">Partial: ${partialCount}</span>
+          <span class="badge non-compliant">Non-Compliance: ${nonCompliantCount}</span>
+        </div>
+      `;
 
       const subsectionsHtml = (sec.subsections || []).map(sub => {
         const subSt = normalizeStatus(sub);
@@ -294,7 +381,7 @@ export default function Home() {
         <div class="section-row" style="border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 18px; margin-bottom: 20px; page-break-inside: avoid;">
           <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ea580c; padding-bottom: 8px; margin-bottom: 15px;">
             <span class="section-name" style="font-weight: 800; font-size: 1rem; color: #0f172a;">Section ${sec.section_num}: ${sec.section_title}</span>
-            <span class="badge ${badgeCls}">${badgeTxt}</span>
+            ${statusSummaryHtml}
           </div>
           ${subsectionsHtml}
         </div>
@@ -302,10 +389,10 @@ export default function Home() {
     }).join('');
 
     const htmlContent = `
-      <div style="font-family: 'Segoe UI', system-ui, sans-serif; padding: 25px; color: #0f172a; line-height: 1.5;">
+      <div style="width: 100%; max-width: 180mm; margin: 0 auto; font-family: 'Segoe UI', system-ui, sans-serif; padding: 8mm 6mm 10mm 6mm; color: #0f172a; line-height: 1.5; box-sizing: border-box;">
         
-        <!-- PAGE 1: HEADER, METADATA & COMPLIANCE SUMMARY TABLE -->
-        <div style="page-break-after: always; min-height: 255mm; display: flex; flexDirection: column; justify-content: space-between;">
+        <!-- HEADER & COMPLIANCE SUMMARY TABLE -->
+        <div>
           <div>
             <div class="header-container" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #ea580c; padding-bottom: 15px; margin-bottom: 25px;">
               <div class="header-title">
@@ -318,18 +405,9 @@ export default function Home() {
               </div>
             </div>
 
-            <div class="meta-section" style="background-color: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 15px; margin-bottom: 30px; font-size: 0.82rem;">
-              <div class="meta-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
-                <div class="meta-item"><span class="meta-lbl" style="font-weight: bold; color: #475569; width: 130px; display: inline-block;">Target Document:</span><span class="meta-val" style="color: #0f172a;">${file.name}</span></div>
-                <div class="meta-item"><span class="meta-lbl" style="font-weight: bold; color: #475569; width: 130px; display: inline-block;">Assessment Date:</span><span class="meta-val" style="color: #0f172a;">${new Date().toLocaleDateString()}</span></div>
-                <div class="meta-item"><span class="meta-lbl" style="font-weight: bold; color: #475569; width: 130px; display: inline-block;">Document Size:</span><span class="meta-val" style="color: #0f172a;">${file.size}</span></div>
-                <div class="meta-item"><span class="meta-lbl" style="font-weight: bold; color: #475569; width: 130px; display: inline-block;">Regulatory Body:</span><span class="meta-val" style="color: #0f172a;">CCAS Compliance Engine</span></div>
-              </div>
-            </div>
-
-            <div style="margin-top: 35px;">
-              <h2 style="font-size: 1.2rem; font-weight: 800; color: #0f172a; margin-bottom: 15px; border-bottom: 1.5px solid #e2e8f0; padding-bottom: 8px;">Executive Compliance Summary</h2>
-              <table style="width: 100%; border-collapse: collapse; border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden; font-size: 0.88rem;">
+            <div style="width: 100%; max-width: 156mm; margin: 18px auto 0 auto;">
+              <h2 style="font-size: 1.2rem; font-weight: 800; color: #0f172a; margin-bottom: 15px; border-bottom: 1.5px solid #e2e8f0; padding-bottom: 8px; text-align: center;">Executive Compliance Summary</h2>
+              <table style="width: 100%; margin: 0 auto; border-collapse: collapse; border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden; font-size: 0.88rem;">
                 <thead>
                   <tr style="background-color: #f8fafc; border-bottom: 2px solid #cbd5e1; text-align: left;">
                     <th style="padding: 12px 15px; font-weight: bold; color: #334155; width: 50%;">Status Category</th>
@@ -373,9 +451,9 @@ export default function Home() {
           </div>
         </div>
 
-        <!-- PAGE 2+: DETAILED SECTION COMPLIANCE AUDIT -->
-        <div>
-          <div class="checklist-title" style="font-size: 1.2rem; font-weight: 800; margin-bottom: 20px; color: #0f172a; border-bottom: 1.5px solid #e2e8f0; padding-bottom: 8px;">Detailed Sections Breakdown</div>
+        <!-- DETAILED SECTION COMPLIANCE AUDIT -->
+        <div style="margin-top: 26px;">
+          <div class="checklist-title" style="font-size: 1.2rem; font-weight: 800; margin-bottom: 20px; color: #0f172a; border-bottom: 1.5px solid #e2e8f0; padding-bottom: 8px; text-align: center;">Detailed Sections Breakdown</div>
           
           <style>
             .badge { padding: 3px 8px; border-radius: 4px; font-size: 0.72rem; font-weight: bold; text-transform: uppercase; white-space: nowrap; }
@@ -398,13 +476,24 @@ export default function Home() {
     loadHtml2Pdf().then((html2pdf) => {
       const opt = {
         margin:       15,
-        filename:     `CCAS_Compliance_Report_${file.name.replace(/\.[^/.]+$/, "")}.pdf`,
+        filename:     buildReportFileName(file.name),
         image:        { type: 'jpeg', quality: 0.98 },
         html2canvas:  { scale: 2, useCORS: true, letterRendering: true },
         jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
       };
 
-      html2pdf().set(opt).from(optContainer).save().then(() => {
+      html2pdf().set(opt).from(optContainer).toPdf().get('pdf').then((pdf) => {
+        const totalPages = pdf.internal.getNumberOfPages();
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+
+        for (let page = 1; page <= totalPages; page += 1) {
+          pdf.setPage(page);
+          pdf.setFontSize(8);
+          pdf.setTextColor(100, 116, 139);
+          pdf.text(`Generated: ${footerDateTime}`, pageWidth / 2, pageHeight - 8, { align: 'center' });
+        }
+      }).save().then(() => {
         optContainer.remove();
       }).catch((err) => {
         console.error("PDF generation error: ", err);
@@ -500,6 +589,41 @@ export default function Home() {
                 <div className="limit-badge">PDF or DOCX • Max 25MB</div>
               </div>
 
+              <div className="scan-config-panel">
+                <div className="scan-config-field">
+                  <label htmlFor="model-select" className="scan-config-label">Scan Model</label>
+                  <select
+                    id="model-select"
+                    className="scan-model-select"
+                    value={selectedModel}
+                    onChange={(e) => setSelectedModel(e.target.value)}
+                  >
+                    {availableModels.map((model) => (
+                      <option key={model.value} value={model.value}>
+                        {model.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {file && (
+                  <div className="selected-file-pill">
+                    <FileText size={15} />
+                    <span>{file.name}</span>
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  className="btn-scan"
+                  onClick={handleStartScan}
+                  disabled={!file}
+                >
+                  <ShieldCheck size={16} />
+                  <span>Scan Document</span>
+                </button>
+              </div>
+
               {errorMsg && (
                 <div className="alert-message error fade-in">
                   <AlertTriangle size={16} />
@@ -532,7 +656,7 @@ export default function Home() {
                 </div>
                 <h2 style={{ color: '#1e293b', fontSize: '1.1rem', fontWeight: 800, margin: 0 }}>Analyzing Document</h2>
                 <p style={{ color: '#94a3b8', fontSize: '0.75rem', margin: '0.15rem 0 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  Semantic audit against CCoP v2.1 · {file?.name}
+                  Semantic audit against CCoP v2.1 · {file?.name} · {availableModels.find((model) => model.value === selectedModel)?.label || selectedModel}
                 </p>
               </div>
 
@@ -637,7 +761,7 @@ export default function Home() {
                       </div>
                       <div style={{ background: '#f0fdf4', border: '1px solid #dcfce7', borderRadius: '6px', padding: '6px 4px' }}>
                         <div style={{ fontSize: '0.55rem', textTransform: 'uppercase', color: '#166534', fontWeight: 700, letterSpacing: '0.5px' }}>Elapsed</div>
-                        <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#14532d', fontFamily: 'monospace', marginTop: '2px' }}>{elapsedSeconds}s</div>
+                        <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#14532d', fontFamily: 'monospace', marginTop: '2px' }}>{formatElapsedTime(elapsedSeconds)}</div>
                       </div>
                       <div style={{ background: '#eff6ff', border: '1px solid #dbeafe', borderRadius: '6px', padding: '6px 4px' }}>
                         <div style={{ fontSize: '0.55rem', textTransform: 'uppercase', color: '#1e40af', fontWeight: 700, letterSpacing: '0.5px' }}>Est. Done</div>
@@ -666,19 +790,15 @@ export default function Home() {
 
                         if (isLast) {
                           return (
-                            <div key={log.id} className="scan-log-line active-pulse-row" style={{ 
-                              height: '54.3px', 
-                              padding: '0.55rem 1rem', 
-                              margin: 0,
+                            <div key={log.id} className="scan-log-line scan-log-line-active active-pulse-row" style={{ 
                               background: 'linear-gradient(90deg, #fff7ed 0%, #ffffff 100%)', 
-                              display: 'flex', 
-                              alignItems: 'center',
                               borderBottomLeftRadius: '7px',
                               borderBottomRightRadius: '7px',
-                              boxSizing: 'border-box'
+                              animationDelay: '0.15s'
                             }}>
+                              <span className="scan-log-orb scan-log-orb-active" />
                               <span className="log-tag warn">SCAN</span>
-                              <span style={{ fontWeight: 600, color: '#ea580c', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
+                              <span className="scan-log-text-active" style={{ fontWeight: 600, color: '#ea580c' }}>
                                 {log.text}
                               </span>
                               <span className="blinking-cursor">|</span>
@@ -688,16 +808,12 @@ export default function Home() {
 
                         return (
                           <div key={log.id} className="scan-log-line" style={{ 
-                            height: '54.3px', 
-                            padding: '0.55rem 1rem', 
                             borderBottom: '1px solid #f1f5f9', 
-                            margin: 0, 
-                            boxSizing: 'border-box', 
-                            display: 'flex', 
-                            alignItems: 'center' 
+                            animationDelay: `${index * 0.12}s`
                           }}>
+                            <span className="scan-log-orb" />
                             <span className={`log-tag ${tagClass}`}>{tagText}</span>
-                            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, color: '#334155' }}>
+                            <span className="scan-log-text">
                               {log.text}
                             </span>
                           </div>

@@ -1,6 +1,7 @@
 import os
 import json
 import re
+import time
 import zipfile
 import xml.etree.ElementTree as ET
 import requests
@@ -16,6 +17,11 @@ CORS(app) # Allow cross-origin requests from React dev server (port 5173)
 
 LM_STUDIO_URL = "http://192.3.71.67:1234/v1/chat/completions"
 MODEL_ID = "ornith-1.0-35b"
+MAX_UNSTRUCTURED_RESPONSE_RETRIES = 3
+AVAILABLE_MODELS = {
+    "ornith-1.0-35b",
+    "qwen-3-14b-instruct"
+}
 
 
 
@@ -95,6 +101,8 @@ def analyze_compliance():
         return jsonify({"error": "No file uploaded"}), 400
 
     uploaded_file = request.files["file"]
+    requested_model = request.form.get("model", MODEL_ID)
+    model_to_use = requested_model if requested_model in AVAILABLE_MODELS else MODEL_ID
     if uploaded_file.filename == "":
         return jsonify({"error": "No selected file"}), 400
 
@@ -233,38 +241,52 @@ def analyze_compliance():
 
 
     print("[*] Contacting LM Studio API...")
+    print(f"[*] Using LM Studio model: {model_to_use}")
+    raw_completion = ""
     try:
-        response = requests.post(
-            LM_STUDIO_URL,
-            json={
-                "model": MODEL_ID,
-                "messages": [
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_content}
-                ],
-                "temperature": 0.2
-            },
-            timeout=600,
-            proxies={"http": None, "https": None}
+        for attempt in range(1, MAX_UNSTRUCTURED_RESPONSE_RETRIES + 1):
+            response = requests.post(
+                LM_STUDIO_URL,
+                json={
+                    "model": model_to_use,
+                    "messages": [
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": user_content}
+                    ],
+                    "temperature": 0.2
+                },
+                timeout=600,
+                proxies={"http": None, "https": None}
 
-        )
+            )
 
-        if response.status_code != 200:
-            return jsonify({"error": f"LM Studio API responded with error status: {response.status_code}"}), 502
+            if response.status_code != 200:
+                return jsonify({"error": f"LM Studio API responded with error status: {response.status_code}"}), 502
 
-        response_data = response.json()
-        raw_completion = response_data["choices"][0]["message"]["content"]
-        
-        # Clean up code blocks if model output it inside ```json ... ```
-        cleaned_json = raw_completion.strip()
-        if cleaned_json.startswith("```"):
-            cleaned_json = re.sub(r"^```(?:json)?\n", "", cleaned_json)
-            cleaned_json = re.sub(r"\n```$", "", cleaned_json)
-            cleaned_json = cleaned_json.strip()
+            response_data = response.json()
+            raw_completion = response_data["choices"][0]["message"]["content"]
 
-        # Parse output as JSON
-        audit_results = json.loads(cleaned_json)
-        return jsonify(audit_results)
+            # Clean up code blocks if model output it inside ```json ... ```
+            cleaned_json = raw_completion.strip()
+            if cleaned_json.startswith("```"):
+                cleaned_json = re.sub(r"^```(?:json)?\n", "", cleaned_json)
+                cleaned_json = re.sub(r"\n```$", "", cleaned_json)
+                cleaned_json = cleaned_json.strip()
+
+            try:
+                audit_results = json.loads(cleaned_json)
+                return jsonify(audit_results)
+            except json.JSONDecodeError as e:
+                print(f"[!] JSON parsing failed on attempt {attempt}/{MAX_UNSTRUCTURED_RESPONSE_RETRIES}: {e}\nRaw output: {raw_completion}")
+                if attempt < MAX_UNSTRUCTURED_RESPONSE_RETRIES:
+                    print("[*] Retrying LM Studio request due to unstructured response...")
+                    time.sleep(1)
+                    continue
+
+                return jsonify({
+                    "error": "The AI model returned an unstructured response after automatic retries. Please re-run the assessment.",
+                    "raw_output": raw_completion[:200]
+                }), 502
 
     except requests.exceptions.Timeout as e:
         print(f"[!] Request timed out: {e}")
@@ -272,12 +294,6 @@ def analyze_compliance():
     except requests.exceptions.RequestException as e:
         print(f"[!] Connection failed: {e}")
         return jsonify({"error": "Failed to connect to LM Studio API at 192.3.71.67:1234. Please verify it is running and accessible."}), 502
-    except json.JSONDecodeError as e:
-        print(f"[!] JSON parsing failed: {e}\nRaw output: {raw_completion}")
-        return jsonify({
-            "error": "The AI model returned an unstructured response. Please re-run the assessment.",
-            "raw_output": raw_completion[:200]
-        }), 502
 
 if __name__ == "__main__":
     print("[*] Starting CCAS Auditor Server on http://localhost:5000")
