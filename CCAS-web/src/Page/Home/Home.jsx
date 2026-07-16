@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-  UploadCloud, 
-  FileText, 
-  CheckCircle2, 
-  AlertTriangle, 
+import {
+  UploadCloud,
+  FileText,
+  CheckCircle2,
+  AlertTriangle,
   Loader2,
   Lock,
   ShieldCheck,
@@ -18,7 +18,7 @@ import './Home.css';
 // ── BACKEND CONFIGURATION ──
 // Set this to a specific IP/domain (e.g. '192.3.70.3') to override the API target host.
 // If left as '', the app automatically connects to the server hosting the website.
-const BACKEND_API_OVERRIDE_IP = '';
+const BACKEND_API_OVERRIDE_IP = '192.3.70.3';
 
 
 export default function Home() {
@@ -31,10 +31,10 @@ export default function Home() {
   const [statusMessage, setStatusMessage] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [expandedSections, setExpandedSections] = useState({}); // track open/close per section
-  
+
   // Real API audit result state
   const [auditResult, setAuditResult] = useState(null);
-  
+
   // Pagination & Scan Timer states
   const [currentPage, setCurrentPage] = useState(1);
   const [scanStartTime, setScanStartTime] = useState('');
@@ -45,8 +45,8 @@ export default function Home() {
   const [logRotationIndex, setLogRotationIndex] = useState(0);
   const [selectedModel, setSelectedModel] = useState('ornith-1.0-35b');
 
- 
-  
+
+
   const fileInputRef = useRef(null);
   const progressIntervalRef = useRef(null);
   const scanStartTimestampRef = useRef(null);
@@ -76,9 +76,9 @@ export default function Home() {
 
   const orderedPassiveScanLogs = passiveScanLogs.length
     ? [
-        ...passiveScanLogs.slice(logRotationIndex % passiveScanLogs.length),
-        ...passiveScanLogs.slice(0, logRotationIndex % passiveScanLogs.length)
-      ]
+      ...passiveScanLogs.slice(logRotationIndex % passiveScanLogs.length),
+      ...passiveScanLogs.slice(0, logRotationIndex % passiveScanLogs.length)
+    ]
     : [];
 
   const scanLogs = [
@@ -173,7 +173,7 @@ export default function Home() {
     e.preventDefault();
     e.stopPropagation();
     setIsDragging(false);
-    
+
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       validateAndProcessFile(e.dataTransfer.files[0]);
     }
@@ -188,7 +188,7 @@ export default function Home() {
   const validateAndProcessFile = (selectedFile) => {
     setErrorMsg('');
     const ext = selectedFile.name.split('.').pop().toLowerCase();
-    
+
     if (ext !== 'pdf' && ext !== 'docx') {
       setErrorMsg('Invalid file format. Please upload a PDF or DOCX plan document.');
       return;
@@ -220,17 +220,17 @@ export default function Home() {
     setUploadState('scanning');
     setProgress(0);
     setStatusMessage('Uploading file to local CCAS-Agent...');
-    
+
     const now = new Date();
     const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     setScanStartTime(timeString);
     scanStartTimestampRef.current = Date.now();
-    
+
     // Show a longer expected completion window for the audit run.
     const estDone = new Date(now.getTime() + estimatedScanDurationSeconds * 1000);
     const estDoneString = estDone.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     setEstimatedCompleteTime(estDoneString);
-    
+
     setCurrentPage(1);
 
 
@@ -241,9 +241,9 @@ export default function Home() {
       if (currentProgress > 90) {
         currentProgress = 90; // Wait for LLM backend response
       }
-      
+
       setProgress(currentProgress);
-      
+
       // Update text details
       const step = [...statusSteps]
         .reverse()
@@ -275,25 +275,25 @@ export default function Home() {
       }
 
       const results = await response.json();
-      
+
       const endTicks = Date.now();
       const startTicks = scanStartTimestampRef.current || endTicks;
       const durationSeconds = Math.round((endTicks - startTicks) / 1000);
       const end = new Date(endTicks);
       const endTimeString = end.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-      
+
       setScanEndTime(endTimeString);
       setScanDuration(durationSeconds);
-      
+
       // Clear ticker interval and complete to 100
       clearInterval(progressIntervalRef.current);
 
-      
+
       // Finish progress to 100%
       setProgress(100);
       setStatusMessage('Analysis complete!');
       setAuditResult(results);
-      
+
       setTimeout(() => {
         setUploadState('completed');
       }, 500);
@@ -485,11 +485,11 @@ export default function Home() {
     // Call html2pdf bundle for direct download
     loadHtml2Pdf().then((html2pdf) => {
       const opt = {
-        margin:       15,
-        filename:     buildReportFileName(file.name),
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, useCORS: true, letterRendering: true },
-        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        margin: 15,
+        filename: buildReportFileName(file.name),
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
       };
 
       html2pdf().set(opt).from(optContainer).toPdf().get('pdf').then((pdf) => {
@@ -524,9 +524,9 @@ export default function Home() {
 
   // Get color config for a given status
   const statusConfig = (status) => {
-    if (status === 'compliant')     return { bg: '#d1fae5', border: '#10b981', text: '#065f46', label: 'COMPLIANT',           dot: '#10b981' };
-    if (status === 'partial')       return { bg: '#fef3c7', border: '#f59e0b', text: '#92400e', label: 'PARTIALLY COMPLIANT', dot: '#f59e0b' };
-    return                                 { bg: '#fee2e2', border: '#ef4444', text: '#991b1b', label: 'NON-COMPLIANT',        dot: '#ef4444' };
+    if (status === 'compliant') return { bg: '#d1fae5', border: '#10b981', text: '#065f46', label: 'COMPLIANT', dot: '#10b981' };
+    if (status === 'partial') return { bg: '#fef3c7', border: '#f59e0b', text: '#92400e', label: 'PARTIALLY COMPLIANT', dot: '#f59e0b' };
+    return { bg: '#fee2e2', border: '#ef4444', text: '#991b1b', label: 'NON-COMPLIANT', dot: '#ef4444' };
   };
 
   // Toggle a section open/closed
@@ -537,18 +537,18 @@ export default function Home() {
   // Derive sections list from API response — supports new hierarchical format OR old flat format
   const auditSections = auditResult
     ? (auditResult.sections || (() => {
-        // Fallback: convert old flat all_sections into grouped sections
-        const flat = auditResult.all_sections || [
-          ...(auditResult.matches || []).map(m => ({ ...m, status: 'compliant' })),
-          ...(auditResult.gaps || []).map(g => ({ ...g, status: 'non-compliant' })),
-        ];
-        return flat.map((s, i) => ({
-          section_num: i + 1,
-          section_title: s.title,
-          overall_status: normalizeStatus(s),
-          subsections: [{ id: s.id, title: s.title, status: normalizeStatus(s), description: s.description, proposed_solution: s.proposed_solution }]
-        }));
-      })())
+      // Fallback: convert old flat all_sections into grouped sections
+      const flat = auditResult.all_sections || [
+        ...(auditResult.matches || []).map(m => ({ ...m, status: 'compliant' })),
+        ...(auditResult.gaps || []).map(g => ({ ...g, status: 'non-compliant' })),
+      ];
+      return flat.map((s, i) => ({
+        section_num: i + 1,
+        section_title: s.title,
+        overall_status: normalizeStatus(s),
+        subsections: [{ id: s.id, title: s.title, status: normalizeStatus(s), description: s.description, proposed_solution: s.proposed_solution }]
+      }));
+    })())
     : [];
 
 
@@ -565,7 +565,7 @@ export default function Home() {
       <main className="portal-main">
         <div className={`upload-container glass-card ${uploadState === 'completed' || uploadState === 'scanning' ? 'expanded' : ''}`}>
 
-          
+
           {/* 1. IDLE STATE: DRAG & DROP ZONE */}
           {uploadState === 'idle' && (
             <div className="state-content fade-in">
@@ -574,7 +574,7 @@ export default function Home() {
                 <p>Upload your plan document to review compliance rules and map adherence parameters against CCoP v2.1.</p>
               </div>
 
-              <div 
+              <div
                 className={`dropzone-area ${isDragging ? 'dragging' : ''}`}
                 onDragEnter={handleDragEnter}
                 onDragOver={handleDragOver}
@@ -582,18 +582,18 @@ export default function Home() {
                 onDrop={handleDrop}
                 onClick={() => fileInputRef.current.click()}
               >
-                <input 
-                  type="file" 
+                <input
+                  type="file"
                   ref={fileInputRef}
                   onChange={handleFileChange}
                   accept=".pdf,.docx"
                   style={{ display: 'none' }}
                 />
-                
+
                 <div className="icon-pulse-wrapper">
                   <UploadCloud size={40} className="upload-icon" />
                 </div>
-                
+
                 <h3>Select your plan document</h3>
                 <p>Drag and drop your PDF or DOCX file here, or click to browse</p>
                 <div className="limit-badge">PDF or DOCX • Max 25MB</div>
@@ -678,9 +678,9 @@ export default function Home() {
                 flexDirection: 'column',
                 gap: '1.5rem'
               }}>
-                
+
                 <div className="scan-dashboard-grid">
-                               {/* Left Column: Radar and Progress Details */}
+                  {/* Left Column: Radar and Progress Details */}
                   <div style={{
                     display: 'flex',
                     flexDirection: 'column',
@@ -714,7 +714,7 @@ export default function Home() {
                         alignItems: 'center', justifyContent: 'center', zIndex: 5
                       }}>
                         <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#f97316" strokeWidth="1.8" style={{ filter: 'drop-shadow(0 0 5px #f9731688)' }}>
-                          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                         </svg>
                       </div>
                     </div>
@@ -800,8 +800,8 @@ export default function Home() {
 
                         if (isLast) {
                           return (
-                            <div key={log.id} className="scan-log-line scan-log-line-active active-pulse-row" style={{ 
-                              background: 'linear-gradient(90deg, #fff7ed 0%, #ffffff 100%)', 
+                            <div key={log.id} className="scan-log-line scan-log-line-active active-pulse-row" style={{
+                              background: 'linear-gradient(90deg, #fff7ed 0%, #ffffff 100%)',
                               borderBottomLeftRadius: '7px',
                               borderBottomRightRadius: '7px',
                               animationDelay: '0.15s'
@@ -817,8 +817,8 @@ export default function Home() {
                         }
 
                         return (
-                          <div key={log.id} className="scan-log-line" style={{ 
-                            borderBottom: '1px solid #f1f5f9', 
+                          <div key={log.id} className="scan-log-line" style={{
+                            borderBottom: '1px solid #f1f5f9',
                             animationDelay: `${index * 0.12}s`
                           }}>
                             <span className="scan-log-orb" />
@@ -852,7 +852,7 @@ export default function Home() {
             const totalPages = Math.ceil(auditSections.length / sectionsPerPage);
             const displayedSections = auditSections.slice(
               (currentPage - 1) * sectionsPerPage,
-currentPage * sectionsPerPage
+              currentPage * sectionsPerPage
             );
 
 
@@ -899,85 +899,85 @@ currentPage * sectionsPerPage
                       </div>
                     </div>
                   </div>
-                 </div>
+                </div>
 
-                 {/* ── Percentage Gauge ── */}
-                 <div style={{
-                   background: '#ffffff',
-                   borderRadius: '12px',
-                   padding: '1.5rem',
-                   display: 'flex',
-                   alignItems: 'center',
-                   gap: '1.5rem',
-                   border: '1.5px solid #e2e8f0',
-                   boxShadow: '0 1px 3px rgba(0,0,0,0.02)',
-                   marginTop: '1.25rem'
-                 }}>
-                   {/* Circular score */}
-                   <div style={{
-                     position: 'relative',
-                     width: '80px', height: '80px', flexShrink: 0
-                   }}>
-                     <svg width="80" height="80" style={{ transform: 'rotate(-90deg)' }}>
-                       <circle cx="40" cy="40" r="34" fill="none" stroke="#e2e8f0" strokeWidth="7"/>
-                       <circle cx="40" cy="40" r="34" fill="none" stroke={pctColor} strokeWidth="7"
-                         strokeDasharray={`${2 * Math.PI * 34}`}
-                         strokeDashoffset={`${2 * Math.PI * 34 * (1 - pct / 100)}`}
-                         strokeLinecap="round"
-                         style={{ transition: 'stroke-dashoffset 1s ease' }}
-                       />
-                     </svg>
-                     <div style={{
-                       position: 'absolute', inset: 0, display: 'flex',
-                       flexDirection: 'column', alignItems: 'center', justifyContent: 'center'
-                     }}>
-                       <span style={{ fontSize: '1.1rem', fontWeight: 800, color: pctColor, lineHeight: 1 }}>{pct}%</span>
-                       <span style={{ fontSize: '0.52rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.5px' }}>Score</span>
-                     </div>
-                   </div>
- 
-                   {/* Stats */}
-                   <div style={{ flex: 1 }}>
-                     <div style={{ color: '#0f172a', fontWeight: 800, fontSize: '1.05rem', marginBottom: '0.25rem' }}>
-                       Overall Compliance Score
-                     </div>
-                     <div style={{ fontSize: '0.78rem', color: pctColor, fontWeight: 600, marginBottom: '0.65rem' }}>
-                       {pct >= 85 ? 'Plan aligns with CCoP v2.1 mandates.'
-                         : pct >= 60 ? 'Action required — critical compliance gaps identified.'
-                         : 'Non-compliant — major required controls missing.'}
-                     </div>
-                     <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
-                       <span style={{
-                         fontSize: '0.72rem', fontWeight: 700, padding: '3px 8px',
-                         borderRadius: '4px', background: '#d1fae5', color: '#065f46',
-                         border: '1px solid #a7f3d0', whiteSpace: 'nowrap'
-                       }}>
-                         compliance: {compliantSubs}
-                       </span>
-                       <span style={{
-                         fontSize: '0.72rem', fontWeight: 700, padding: '3px 8px',
-                         borderRadius: '4px', background: '#fef3c7', color: '#92400e',
-                         border: '1px solid #fde68a', whiteSpace: 'nowrap'
-                       }}>
-                         partial compliance: {partialSubs}
-                       </span>
-                       <span style={{
-                         fontSize: '0.72rem', fontWeight: 700, padding: '3px 8px',
-                         borderRadius: '4px', background: '#fee2e2', color: '#991b1b',
-                         border: '1px solid #fca5a5', whiteSpace: 'nowrap'
-                       }}>
-                         noncompliance: {nonSubs}
-                       </span>
-                       <span style={{
-                         fontSize: '0.72rem', fontWeight: 700, padding: '3px 8px',
-                         borderRadius: '4px', background: '#f1f5f9', color: '#475569',
-                         border: '1px solid #e2e8f0', whiteSpace: 'nowrap'
-                       }}>
-                         total: {totalSubs}
-                       </span>
-                     </div>
-                   </div>
-                 </div>
+                {/* ── Percentage Gauge ── */}
+                <div style={{
+                  background: '#ffffff',
+                  borderRadius: '12px',
+                  padding: '1.5rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '1.5rem',
+                  border: '1.5px solid #e2e8f0',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.02)',
+                  marginTop: '1.25rem'
+                }}>
+                  {/* Circular score */}
+                  <div style={{
+                    position: 'relative',
+                    width: '80px', height: '80px', flexShrink: 0
+                  }}>
+                    <svg width="80" height="80" style={{ transform: 'rotate(-90deg)' }}>
+                      <circle cx="40" cy="40" r="34" fill="none" stroke="#e2e8f0" strokeWidth="7" />
+                      <circle cx="40" cy="40" r="34" fill="none" stroke={pctColor} strokeWidth="7"
+                        strokeDasharray={`${2 * Math.PI * 34}`}
+                        strokeDashoffset={`${2 * Math.PI * 34 * (1 - pct / 100)}`}
+                        strokeLinecap="round"
+                        style={{ transition: 'stroke-dashoffset 1s ease' }}
+                      />
+                    </svg>
+                    <div style={{
+                      position: 'absolute', inset: 0, display: 'flex',
+                      flexDirection: 'column', alignItems: 'center', justifyContent: 'center'
+                    }}>
+                      <span style={{ fontSize: '1.1rem', fontWeight: 800, color: pctColor, lineHeight: 1 }}>{pct}%</span>
+                      <span style={{ fontSize: '0.52rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.5px' }}>Score</span>
+                    </div>
+                  </div>
+
+                  {/* Stats */}
+                  <div style={{ flex: 1 }}>
+                    <div style={{ color: '#0f172a', fontWeight: 800, fontSize: '1.05rem', marginBottom: '0.25rem' }}>
+                      Overall Compliance Score
+                    </div>
+                    <div style={{ fontSize: '0.78rem', color: pctColor, fontWeight: 600, marginBottom: '0.65rem' }}>
+                      {pct >= 85 ? 'Plan aligns with CCoP v2.1 mandates.'
+                        : pct >= 60 ? 'Action required — critical compliance gaps identified.'
+                          : 'Non-compliant — major required controls missing.'}
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                      <span style={{
+                        fontSize: '0.72rem', fontWeight: 700, padding: '3px 8px',
+                        borderRadius: '4px', background: '#d1fae5', color: '#065f46',
+                        border: '1px solid #a7f3d0', whiteSpace: 'nowrap'
+                      }}>
+                        compliance: {compliantSubs}
+                      </span>
+                      <span style={{
+                        fontSize: '0.72rem', fontWeight: 700, padding: '3px 8px',
+                        borderRadius: '4px', background: '#fef3c7', color: '#92400e',
+                        border: '1px solid #fde68a', whiteSpace: 'nowrap'
+                      }}>
+                        partial compliance: {partialSubs}
+                      </span>
+                      <span style={{
+                        fontSize: '0.72rem', fontWeight: 700, padding: '3px 8px',
+                        borderRadius: '4px', background: '#fee2e2', color: '#991b1b',
+                        border: '1px solid #fca5a5', whiteSpace: 'nowrap'
+                      }}>
+                        noncompliance: {nonSubs}
+                      </span>
+                      <span style={{
+                        fontSize: '0.72rem', fontWeight: 700, padding: '3px 8px',
+                        borderRadius: '4px', background: '#f1f5f9', color: '#475569',
+                        border: '1px solid #e2e8f0', whiteSpace: 'nowrap'
+                      }}>
+                        total: {totalSubs}
+                      </span>
+                    </div>
+                  </div>
+                </div>
 
                 {/* ── Section title row with download & rescan icons ── */}
                 <div style={{
@@ -1075,7 +1075,7 @@ currentPage * sectionsPerPage
                               width: '10px', height: '10px', borderRadius: '50%',
                               background: cfg.dot, flexShrink: 0, boxShadow: `0 0 6px ${cfg.dot}88`
                             }} />
-                            
+
                             <span style={{ flex: 1, fontWeight: 700, fontSize: '0.85rem', color: '#0f172a' }}>
                               Section {section.section_num}: {section.section_title}
                             </span>
@@ -1127,7 +1127,7 @@ currentPage * sectionsPerPage
                             </div>
 
                             <span style={{ color: cfg.text, flexShrink: 0 }}>
-                              {isOpen ? <ChevronUp size={16}/> : <ChevronDown size={16}/>}
+                              {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                             </span>
                           </button>
 
@@ -1144,7 +1144,7 @@ currentPage * sectionsPerPage
                                     borderLeft: `3px solid ${subCfg.dot}`, borderRadius: '6px',
                                     padding: '0.75rem 0.95rem'
                                   }}>
-                                    
+
                                     {/* Subtitle Header Row with left sub-title and right status badge */}
                                     <div style={{
                                       display: 'flex',
@@ -1169,7 +1169,7 @@ currentPage * sectionsPerPage
                                     </div>
 
                                     <p style={{ fontSize: '0.78rem', color: '#475569', lineHeight: 1.45, margin: 0 }}>{sub.description}</p>
-                                    
+
                                     {/* Structured child container proposed solutions */}
                                     {(subStatus === 'partial' || subStatus === 'non-compliant') && sub.proposed_solution && (
                                       <div style={{
@@ -1240,7 +1240,7 @@ currentPage * sectionsPerPage
                     >
                       Prev
                     </button>
-                    
+
                     {Array.from({ length: totalPages }).map((_, idx) => {
                       const pageNum = idx + 1;
                       const isCurrent = currentPage === pageNum;
