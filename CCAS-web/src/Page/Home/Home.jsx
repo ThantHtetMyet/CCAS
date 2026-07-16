@@ -252,11 +252,12 @@ export default function Home() {
 
     try {
       // Send file to Flask server endpoint
-      const targetHost = window.location.hostname === 'localhost' ? 'localhost' : '192.3.70.3';
+      const targetHost = window.location.hostname;
       const response = await fetch(`http://${targetHost}:5000/api/analyze`, {
         method: 'POST',
         body: formData
       });
+
 
 
       if (!response.ok) {
