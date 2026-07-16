@@ -296,5 +296,8 @@ def analyze_compliance():
         return jsonify({"error": "Failed to connect to LM Studio API at 192.3.71.67:1234. Please verify it is running and accessible."}), 502
 
 if __name__ == "__main__":
-    print("[*] Starting CCAS Auditor Server on http://localhost:5000")
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    import os
+    port = int(os.environ.get("PORT", 5000))
+    print(f"[*] Starting CCAS Auditor Server on http://0.0.0.0:{port}")
+    app.run(host="0.0.0.0", port=port, debug=False)
+
