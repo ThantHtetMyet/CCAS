@@ -1,0 +1,80 @@
+.dashboard-hero-actions {
+  margin-top: 18px;
+}
+
+.dashboard-panel {
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+}
+
+.dashboard-status-grid {
+  margin-top: 8px;
+}
+
+.dashboard-kpi-small {
+  font-size: 1.28rem;
+}
+
+.dashboard-launch-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: auto;
+  min-height: 0;
+  justify-content: flex-start;
+  margin-top: 8px;
+}
+
+.dashboard-inline-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  align-self: flex-start;
+  margin-top: 6px;
+}
+
+.ready-tone {
+  border-color: rgba(34, 197, 94, 0.2);
+}
+
+.caution-tone {
+  border-color: rgba(245, 158, 11, 0.2);
+}
+
+.accent-tone {
+  border-color: rgba(168, 85, 247, 0.22);
+}
+
+.dashboard-history-list {
+  display: grid;
+  gap: 12px;
+}
+
+.dashboard-history-item {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 18px;
+  border-radius: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  background: rgba(15, 23, 42, 0.38);
+  color: #f8fafc;
+  text-align: left;
+  cursor: pointer;
+}
+
+.dashboard-history-title {
+  font-size: 0.96rem;
+  font-weight: 800;
+}
+
+.dashboard-history-copy,
+.dashboard-history-empty {
+  margin-top: 6px;
+  color: #94a3b8;
+  font-size: 0.88rem;
+  line-height: 1.55;
+}

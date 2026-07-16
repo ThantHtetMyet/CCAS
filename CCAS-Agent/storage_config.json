@@ -1,0 +1,9 @@
+{
+  "database_dir": "d:\\Willowglen Services PTE LTD\\Workplace\\Cybersecurity_Compliance_Tool\\Database",
+  "reports_dir": "d:\\Willowglen Services PTE LTD\\Workplace\\Cybersecurity_Compliance_Tool\\Database\\Report",
+  "workspace_db_path": "d:\\Willowglen Services PTE LTD\\Workplace\\Cybersecurity_Compliance_Tool\\Database\\workspaces.txt",
+  "template_dir": "d:\\Willowglen Services PTE LTD\\Workplace\\Cybersecurity_Compliance_Tool\\Database\\Report\\Template",
+  "ccop_template_pdf_path": "d:\\Willowglen Services PTE LTD\\Workplace\\Cybersecurity_Compliance_Tool\\Database\\Report\\Template\\CCoP_template.pdf",
+  "ai_server_base_url": "http://192.3.71.67:1234",
+  "ai_chat_completions_url": "http://192.3.71.67:1234/v1/chat/completions"
+}

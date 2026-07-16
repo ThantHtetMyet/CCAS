@@ -5,3 +5,5 @@ CCAS-web/dist/
 *.log
 .DS_Store
 Thumbs.db
+Database/Report/*
+!Database/Report/.gitkeep
