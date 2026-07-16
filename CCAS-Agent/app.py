@@ -95,7 +95,12 @@ def extract_docx_text(file_path):
         print(f"Error parsing DOCX internally: {e}")
         return None
 
+@app.route("/", methods=["GET"])
+def health_check():
+    return jsonify({"status": "online", "service": "CCAS Auditor Backend", "api": "/api/analyze"})
+
 @app.route("/api/analyze", methods=["POST"])
+
 def analyze_compliance():
     if "file" not in request.files:
         return jsonify({"error": "No file uploaded"}), 400
