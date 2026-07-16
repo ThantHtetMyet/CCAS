@@ -15,7 +15,15 @@ import {
 } from 'lucide-react';
 import './Home.css';
 
+// ── BACKEND CONFIGURATION ──
+// Set this to a specific IP/domain (e.g. '192.3.70.3') to override the API target host.
+// If left as '', the app automatically connects to the server hosting the website.
+const BACKEND_API_OVERRIDE_IP = '';
+
+
 export default function Home() {
+
+
   const [file, setFile] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   const [uploadState, setUploadState] = useState('idle'); // idle | scanning | completed
@@ -252,11 +260,12 @@ export default function Home() {
 
     try {
       // Send file to Flask server endpoint
-      const targetHost = window.location.hostname;
+      const targetHost = BACKEND_API_OVERRIDE_IP || window.location.hostname;
       const response = await fetch(`http://${targetHost}:5000/api/analyze`, {
         method: 'POST',
         body: formData
       });
+
 
 
 
